@@ -1,0 +1,10 @@
+<resources>
+
+    <string name="app_name">Web View Window</string>
+
+    <string name="ongoing_notification">WebViewWindow ON</string>
+
+    <string name="enable_disable">Enable/Disable</string>
+    <string name="base_load_url">Base Load URL</string>
+
+</resources>

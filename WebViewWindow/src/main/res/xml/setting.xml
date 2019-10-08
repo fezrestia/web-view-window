@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<androidx.preference.PreferenceScreen
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+>
+    <androidx.preference.PreferenceCategory
+        app:title="@string/app_name"
+    >
+        <androidx.preference.SwitchPreference
+            app:key="sp-key-www-enable-disable"
+            app:title="@string/enable_disable"
+            app:persistent="false"
+        />
+        <androidx.preference.EditTextPreference
+            app:key="sp-key-base-load-url"
+            app:title="@string/base_load_url"
+            app:persistent="true"
+            app:useSimpleSummaryProvider="true"
+        />
+    </androidx.preference.PreferenceCategory>
+</androidx.preference.PreferenceScreen>
