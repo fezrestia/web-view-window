@@ -11,7 +11,7 @@ android {
     buildToolsVersion '29.0.2'
 
     defaultConfig {
-        applicationId "com.fezrestia.android.webwedgeview"
+        applicationId "com.fezrestia.android.webviewwindow"
         minSdkVersion 26
         targetSdkVersion 29
     }
@@ -67,7 +67,7 @@ android {
         variant.outputs.all { output ->
             if (variant.name == 'release') {
                 if (output.outputFile != null && output.outputFile.name.endsWith('.apk')) {
-                    outputFileName = "WebWedgeWindow.apk"
+                    outputFileName = "WebViewWindow.apk"
                 }
             }
         }
