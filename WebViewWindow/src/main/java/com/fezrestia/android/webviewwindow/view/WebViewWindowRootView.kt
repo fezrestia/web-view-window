@@ -23,19 +23,23 @@ import com.fezrestia.android.util.FrameSize
 import com.fezrestia.android.util.Log
 import kotlinx.android.synthetic.main.overlay_root_view.view.*
 
-class OverlayRootView(
+class WebViewWindowRootView(
         context: Context,
         attrs: AttributeSet?,
         defStyle: Int) : FrameLayout(context, attrs, defStyle) {
 
     // Web.
-    private lateinit var webView: UserWebView
+    private lateinit var webView: ExtendedWebView
 
-    // Screen coordinates.
-    private lateinit var screenSize: FrameSize
+    // Display size.
+    private lateinit var displaySize: FrameSize
 
-    // Overlay window orientation.
-    private var orientation = Configuration.ORIENTATION_UNDEFINED
+    // Display orientation.
+    private enum class Orientation {
+        PORTRAIT,
+        LANDSCAPE,
+    }
+    private lateinit var displayOrientation: Orientation
 
     // Window.
     private lateinit var windowManager: WindowManager
@@ -64,25 +68,15 @@ class OverlayRootView(
     fun initialize() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "initialize() : E")
 
-        // Cache instance references.
         initializeInstances()
-
-        // Load setting.
-        loadPreferences()
-
-        // Window related.
         createWindowParameters()
-
-        // Update UI.
-        updateTotalUserInterface()
 
         if (Log.IS_DEBUG) Log.logDebug(TAG, "initialize() : X")
     }
 
-    @SuppressLint("RtlHardcoded")
     private fun initializeInstances() {
         // Web view.
-        webView = UserWebView(context)
+        webView = ExtendedWebView(context)
         webView.initialize()
         val url = App.sp.getString(
                 Constants.SP_KEY_BASE_LOAD_URL,
@@ -102,10 +96,6 @@ class OverlayRootView(
         slider_grip_container.setOnTouchListener(SliderGripTouchEventHandler())
     }
 
-    private fun loadPreferences() {
-        // NOP.
-    }
-
     private fun createWindowParameters() {
         windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
@@ -122,7 +112,6 @@ class OverlayRootView(
      */
     fun release() {
         slider_grip_container.setOnTouchListener(null)
-        setOnTouchListener(null)
 
         webView.release()
     }
@@ -131,8 +120,8 @@ class OverlayRootView(
      * Add this view to WindowManager layer.
      */
     fun addToOverlayWindow() {
-        // Window parameters.
-        updateWindowParams()
+        // Update display configurations and layout parameters.
+        updateTotalUserInterface()
 
         // Add to WindowManager.
         windowManager.addView(this, windowLayoutParams)
@@ -145,73 +134,77 @@ class OverlayRootView(
         windowManager.removeView(this)
     }
 
+    private fun updateDisplayConfig() {
+        // Get display size.
+        val display = windowManager.defaultDisplay
+        val size = Point()
+        display.getSize(size)
+
+        displaySize = FrameSize(size.x, size.y)
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "updateDisplayConfig() : $displaySize")
+
+        // Get display displayOrientation.
+        displayOrientation = if (displaySize.height < displaySize.width) {
+            Orientation.LANDSCAPE
+        } else {
+            Orientation.PORTRAIT
+        }
+    }
+
+    @SuppressLint("RtlHardcoded")
     private fun updateWindowParams() {
-        windowLayoutParams.width = screenSize.shortLineSize
-        windowLayoutParams.height = screenSize.shortLineSize - SLIDER_GRIP_WIDTH_PIX
-        windowLayoutParams.gravity = Gravity.CENTER
+        windowLayoutParams.gravity = Gravity.LEFT or Gravity.CENTER_VERTICAL
+
+        // Window size.
+        when (displayOrientation) {
+            Orientation.PORTRAIT -> {
+                windowLayoutParams.width = displaySize.shortLine
+                windowLayoutParams.height = (displaySize.longLine * SCREEN_LONG_LINE_CLEARANCE).toInt()
+            }
+
+            Orientation.LANDSCAPE -> {
+                var statusBarHeight = 0
+                val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
+                if (resourceId > 0) {
+                    statusBarHeight = resources.getDimensionPixelSize(resourceId)
+                }
+
+                windowLayoutParams.width = (displaySize.longLine * SCREEN_LONG_LINE_CLEARANCE).toInt()
+                windowLayoutParams.height = displaySize.shortLine - statusBarHeight * 2
+            }
+        }
 
         // Window show/hide constants.
         windowOpenPosX = 0
-        windowClosePosX = -1 * (screenSize.shortLineSize - SLIDER_GRIP_WIDTH_PIX)
+        windowClosePosX = -1 * (windowLayoutParams.width - SLIDER_GRIP_WIDTH_PIX)
 
+        // Initial values
         windowLayoutParams.x = windowOpenPosX
         windowLayoutParams.y = 0
 
-        if (Log.IS_DEBUG)
-            Log.logDebug(TAG,
-                    "updateWindowParams() : WinSizeWxH="
-                            + windowLayoutParams.width + "x" + windowLayoutParams.height)
-
-        if (isAttachedToWindow) {
-            windowManager.updateViewLayout(this, windowLayoutParams)
+        if (Log.IS_DEBUG) {
+            val w = windowLayoutParams.width
+            val h = windowLayoutParams.height
+            Log.logDebug(TAG, "updateWindowParams() : WinSize WxH = $w x $h")
         }
     }
 
     private fun updateLayoutParams() {
-        // Container size.
-        web_view_container.layoutParams.width = screenSize.shortLineSize - SLIDER_GRIP_WIDTH_PIX
-        web_view_container.layoutParams.height = screenSize.shortLineSize - SLIDER_GRIP_WIDTH_PIX
-
-        // Contents size.
-        val webViewLayoutParams = webView.layoutParams as LayoutParams
-        webViewLayoutParams.width = screenSize.shortLineSize - SLIDER_GRIP_WIDTH_PIX
-        webViewLayoutParams.height = screenSize.shortLineSize - SLIDER_GRIP_WIDTH_PIX
-        webViewLayoutParams.gravity = Gravity.CENTER
-        webView.layoutParams = webViewLayoutParams
+        val containerParams = web_view_container.layoutParams
+        containerParams.width = windowLayoutParams.width - SLIDER_GRIP_WIDTH_PIX
+        containerParams.height = windowLayoutParams.height
+        web_view_container.layoutParams = containerParams
     }
 
     private fun updateTotalUserInterface() {
-        // Screen configuration.
-        calculateScreenConfiguration()
-        // Window layout.
+        updateDisplayConfig()
         updateWindowParams()
-        // UI layout.
         updateLayoutParams()
 
-        // After screen orientation changed or something, always hide overlay view.
+        // After screen displayOrientation changed or something, always close overlay view.
         if (isAttachedToWindow) {
-            windowLayoutParams.x = WINDOW_HIDDEN_POS_X
+            windowLayoutParams.x = windowClosePosX
             windowManager.updateViewLayout(this, windowLayoutParams)
-        }
-    }
-
-    private fun calculateScreenConfiguration() {
-        // Get display size.
-        val display = windowManager.defaultDisplay
-        val screenSize = Point()
-        display.getSize(screenSize)
-
-        this.screenSize = FrameSize(screenSize.x, screenSize.y)
-
-        if (Log.IS_DEBUG)
-            Log.logDebug(TAG,
-                    "calculateScreenConfiguration() : " + this.screenSize.toString())
-
-        // Get display orientation.
-        orientation = if (this.screenSize.height < this.screenSize.width) {
-            Configuration.ORIENTATION_LANDSCAPE
-        } else {
-            Configuration.ORIENTATION_PORTRAIT
         }
     }
 
@@ -263,7 +256,7 @@ class OverlayRootView(
 
                         // Update.
                         windowLayoutParams.x = nextWinPosX
-                        windowManager.updateViewLayout(this@OverlayRootView, windowLayoutParams)
+                        windowManager.updateViewLayout(this@WebViewWindowRootView, windowLayoutParams)
                     }
                 }
 
@@ -282,7 +275,7 @@ class OverlayRootView(
 
                     // Fixed position.
                     val targetPoint: Point
-                    if (screenSize.shortLineSize / 2 < event.rawX) {
+                    if (displaySize.shortLine / 2 < event.rawX) {
                         // To be opened.
                         targetPoint = Point(windowOpenPosX, windowLayoutParams.y)
                         windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
@@ -294,7 +287,7 @@ class OverlayRootView(
 
                     // Start fix.
                     val newTask = WindowPositionCorrectionTask(
-                            this@OverlayRootView,
+                            this@WebViewWindowRootView,
                             targetPoint,
                             windowManager,
                             windowLayoutParams,
@@ -409,7 +402,7 @@ class OverlayRootView(
     }
 
     companion object {
-        private const val TAG = "OverlayRootView"
+        private const val TAG = "WebViewWindowRootView"
 
         private const val INTERACTIVE_WINDOW_FLAGS = ( 0 // Dummy
                 or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
@@ -424,8 +417,11 @@ class OverlayRootView(
                 or WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
         )
 
+        // Screen long line clearance.
+        private const val SCREEN_LONG_LINE_CLEARANCE = 0.8f
+
         // Grip width.
-        private const val SLIDER_GRIP_WIDTH_PIX = 1080 - 960
+        private const val SLIDER_GRIP_WIDTH_PIX = 64
 
         // Hidden window position constants.
         private const val WINDOW_HIDDEN_POS_X = -5000

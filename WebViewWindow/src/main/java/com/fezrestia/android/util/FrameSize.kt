@@ -1,5 +1,3 @@
-@file:Suppress("unused")
-
 package com.fezrestia.android.util
 
 import kotlin.math.max
@@ -18,7 +16,7 @@ class FrameSize(val width: Int, val height: Int) {
      *
      * @return Length
      */
-    val longLineSize: Int
+    val longLine: Int
         get() = max(width, height)
 
     /**
@@ -26,7 +24,7 @@ class FrameSize(val width: Int, val height: Int) {
      *
      * @return Length
      */
-    val shortLineSize: Int
+    val shortLine: Int
         get() = min(width, height)
 
     override fun toString(): String {

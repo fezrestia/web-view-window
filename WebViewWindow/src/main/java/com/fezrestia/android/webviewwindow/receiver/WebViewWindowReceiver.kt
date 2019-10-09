@@ -1,4 +1,4 @@
-@file:Suppress("ConstantConditionIf", "MayBeConstant")
+@file:Suppress("ConstantConditionIf")
 
 package com.fezrestia.android.webviewwindow.receiver
 
@@ -7,10 +7,10 @@ import android.content.Context
 import android.content.Intent
 
 import com.fezrestia.android.webviewwindow.Constants
-import com.fezrestia.android.webviewwindow.control.OverlayViewController
 import com.fezrestia.android.util.Log
+import com.fezrestia.android.webviewwindow.service.WebViewWindowService
 
-class OverlayViewReceiver : BroadcastReceiver() {
+class WebViewWindowReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onReceive()")
@@ -23,18 +23,20 @@ class OverlayViewReceiver : BroadcastReceiver() {
         } else {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "ACTION = $action")
             when (action) {
-                Constants.INTENT_ACTION_TOGGLE_OVERLAY_VISIBILITY ->
-                    OverlayViewController.singleton.toggleVisibility()
+                Constants.INTENT_ACTION_TOGGLE_OVERLAY_VISIBILITY -> {
+                    val service = Intent(Constants.INTENT_ACTION_TOGGLE_OVERLAY_VISIBILITY)
+                    service.setClass(
+                        context.applicationContext,
+                        WebViewWindowService::class.java)
+                    context.startForegroundService(service)
+                }
 
-                else ->
-                    // Unexpected Action.
-                    throw IllegalArgumentException("Unexpected Action : $action")
+                else -> throw IllegalArgumentException("Unexpected ACTION = $action")
             }
         }
     }
 
     companion object {
-        // Log tag.
-        private val TAG = "OverlayViewReceiver"
+        private const val TAG = "WebViewWindowReceiver"
     }
 }

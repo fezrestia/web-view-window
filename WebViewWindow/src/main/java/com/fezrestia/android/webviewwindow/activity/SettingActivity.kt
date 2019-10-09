@@ -12,7 +12,6 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
@@ -21,7 +20,7 @@ import com.fezrestia.android.webviewwindow.Constants
 import com.fezrestia.android.webviewwindow.R
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.App
-import com.fezrestia.android.webviewwindow.service.OverlayViewService
+import com.fezrestia.android.webviewwindow.service.WebViewWindowService
 
 class SettingActivity : AppCompatActivity() {
     private val TAG = "SettingActivity"
@@ -72,23 +71,22 @@ class SettingActivity : AppCompatActivity() {
                         val isChecked: Boolean = newValue as Boolean
                         val context = requireContext()
 
-                        if (isChecked) {
-                            val service = Intent(context, OverlayViewService::class.java)
-                            val component = context.startForegroundService(service)
-
-                            if (Log.IS_DEBUG) {
-                                if (component != null) {
-                                    Log.logDebug(TAG, "startService() : Component = $component")
-                                } else {
-                                    Log.logDebug(TAG, "startService() : Component = NULL")
-                                }
-                            }
+                        val service = if (isChecked) {
+                            Intent(Constants.INTENT_ACTION_START_OVERLAY_WINDOW)
                         } else {
-                            val service = Intent(context, OverlayViewService::class.java)
-                            val isSuccess = context.stopService(service)
+                            Intent(Constants.INTENT_ACTION_STOP_OVERLAY_WINDOW)
+                        }
+                        service.setClass(
+                            context.applicationContext,
+                            WebViewWindowService::class.java)
 
-                            if (Log.IS_DEBUG) {
-                                Log.logDebug(TAG, "stopService() : isSuccess = $isSuccess")
+                        val component = context.startForegroundService(service)
+
+                        if (Log.IS_DEBUG) {
+                            if (component != null) {
+                                Log.logDebug(TAG, "startForegroundService() : Component = $component")
+                            } else {
+                                Log.logDebug(TAG, "startForegroundService() : Component = NULL")
                             }
                         }
                     }

@@ -1,4 +1,4 @@
-@file:Suppress("ConstantConditionIf", "MayBeConstant")
+@file:Suppress("ConstantConditionIf")
 
 package com.fezrestia.android.webviewwindow
 
@@ -39,14 +39,14 @@ class App : Application() {
     }
 
     companion object {
-        private val TAG = "App"
+        private const val TAG = "App"
 
         lateinit var sp: SharedPreferences
             private set
 
         // SharedPreferences version key.
-        private val KEY_SP_VER = "key-sp-ver"
-        private val VAL_SP_VER = 1
+        private const val KEY_SP_VER = "key-sp-ver"
+        private const val VAL_SP_VER = 1
 
         lateinit var ui: Handler
             private set

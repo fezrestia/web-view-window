@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.fezrestia.android.webviewwindow"
 
-    android:versionCode="31"
-    android:versionName="0.0.1-31"
+    android:versionCode="38"
+    android:versionName="0.0.2-38"
 >
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -38,7 +38,7 @@
         </activity>
 
         <receiver
-             android:name="com.fezrestia.android.webviewwindow.receiver.OverlayViewReceiver"
+             android:name="com.fezrestia.android.webviewwindow.receiver.WebViewWindowReceiver"
              android:exported="false"
         >
             <intent-filter>
@@ -47,7 +47,7 @@
         </receiver>
 
         <service
-            android:name="com.fezrestia.android.webviewwindow.service.OverlayViewService"
+            android:name="com.fezrestia.android.webviewwindow.service.WebViewWindowService"
             android:exported="false"
         />
 

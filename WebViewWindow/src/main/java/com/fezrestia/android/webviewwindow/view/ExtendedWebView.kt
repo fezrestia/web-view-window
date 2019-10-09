@@ -22,7 +22,7 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 
-class UserWebView(context: Context) : WebView(context) {
+class ExtendedWebView(context: Context) : WebView(context) {
     private lateinit var backHandlerThread: HandlerThread
     private lateinit var backHandler: Handler
 
@@ -185,7 +185,7 @@ class UserWebView(context: Context) : WebView(context) {
                 Log.logDebug(TAG, "URL=$url")
             }
 
-            this@UserWebView.loadUrl(url)
+            this@ExtendedWebView.loadUrl(url)
 
             if (Log.IS_DEBUG) Log.logDebug(TAG, "shouldOverrideUrlLoading() : X")
             return true
@@ -213,7 +213,7 @@ class UserWebView(context: Context) : WebView(context) {
     }
 
     companion object {
-        private const val TAG = "UserWebView"
+        private const val TAG = "ExtendedWebView"
 
         // Java Script -> Native Java interface.
         private const val INJECTED_JAVA_SCRIPT_NATIVE_INTERFACE_OBJECT_NAME = "jsni"

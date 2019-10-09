@@ -1,6 +1,10 @@
 package com.fezrestia.android.webviewwindow
 
 object Constants {
+    /** Intent action to start overlay window. */
+    const val INTENT_ACTION_START_OVERLAY_WINDOW = "com.fezrestia.android.webviewwindow.intent.ACTION_START_OVERLAY_WINDOW"
+    /** Intent action to stop overlay window. */
+    const val INTENT_ACTION_STOP_OVERLAY_WINDOW = "com.fezrestia.android.webviewwindow.intent.ACTION_STOP_OVERLAY_WINDOW"
     /** Intent action for overlay visibility switch. */
     const val INTENT_ACTION_TOGGLE_OVERLAY_VISIBILITY = "com.fezrestia.android.webviewwindow.intent.ACTION_TOGGLE_OVERLAY_VISIBILITY"
 
