@@ -210,28 +210,44 @@ class WebViewWindowRootView(
         updateWindowParams()
         updateLayoutParams()
 
-        // After screen displayOrientation changed or something, always close overlay view.
         if (isAttachedToWindow) {
+            // After screen displayOrientation changed or something, always close overlay view.
+
+            // Window.
             windowLayoutParams.x = closedWindowLayout.x
             windowLayoutParams.height = closedWindowLayout.height
             windowManager.updateViewLayout(this, windowLayoutParams)
+
             // Layout.
             val containerParams = web_view_container.layoutParams
             containerParams.height = closedWindowLayout.height
             web_view_container.layoutParams = containerParams
+
+            webView.onPause()
+        } else {
+            // Added to window manager as Opened state.
+            webView.onResume()
         }
     }
 
     fun toggleShowHide() {
-        if (windowLayoutParams.x == WINDOW_HIDDEN_POS_X) {
-            // Show.
-            windowLayoutParams.x = closedWindowLayout.x
-            windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
-        } else {
-            // Hide.
-            windowLayoutParams.x = WINDOW_HIDDEN_POS_X
-            windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
+        when {
+            windowLayoutParams.x == WINDOW_HIDDEN_POS_X -> {
+                // Hidden -> Closed.
+                windowLayoutParams.x = closedWindowLayout.x
+            }
+
+            windowLayoutParams.x == closedWindowLayout.x -> {
+                // Closed -> Hidden.
+                windowLayoutParams.x = WINDOW_HIDDEN_POS_X
+            }
+
+            else -> {
+                // NOP. Maybe now on Opened.
+                return
+            }
         }
+
         windowManager.updateViewLayout(this, windowLayoutParams)
     }
 
@@ -291,10 +307,14 @@ class WebViewWindowRootView(
                         // To be opened.
                         targetLayout = openedWindowLayout
                         windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
+
+                        webView.onResume()
                     } else {
                         // To be closed.
                         targetLayout = closedWindowLayout
                         windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
+
+                        webView.onPause()
                     }
 
                     // Start fix.
