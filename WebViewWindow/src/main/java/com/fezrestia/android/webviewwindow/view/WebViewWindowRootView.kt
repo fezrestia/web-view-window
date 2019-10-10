@@ -49,6 +49,14 @@ class WebViewWindowRootView(
     private var windowOpenPosX = 0
     private var windowClosePosX = 0
 
+    // Window height.
+    private var windowHeightOpen = 0
+    private var windowHeightClose = 0
+
+    // Window open/close point.
+    private var windowOpenPoint = Point(0, 0)
+    private var windowClosePoint = Point(0, 0)
+
     // Window position correction animation.
     private var windowPositionCorrectionTask: WindowPositionCorrectionTask? = null
 
@@ -172,11 +180,15 @@ class WebViewWindowRootView(
                 }
 
                 windowLayoutParams.width = (displaySize.longLine * SCREEN_LONG_LINE_CLEARANCE).toInt()
-                windowLayoutParams.height = displaySize.shortLine - statusBarHeight
+                windowLayoutParams.height = displaySize.shortLine - statusBarHeight * 2
 
-                windowLayoutParams.y = (displaySize.shortLine - windowLayoutParams.height) / 2
+                windowLayoutParams.y = statusBarHeight / 2
             }
         }
+
+        // Window height.
+        windowHeightOpen = windowLayoutParams.height
+        windowHeightClose = SLIDER_GRIP_HEIGHT_PIX
 
         // Window show/hide constants.
         windowOpenPosX = 0
@@ -184,6 +196,10 @@ class WebViewWindowRootView(
 
         // Initial values
         windowLayoutParams.x = windowOpenPosX
+
+        // Open/Close point.
+        windowOpenPoint = Point(windowOpenPosX, windowLayoutParams.y)
+        windowClosePoint = Point(windowClosePosX, windowLayoutParams.y)
 
         if (Log.IS_DEBUG) {
             val w = windowLayoutParams.width
@@ -207,6 +223,7 @@ class WebViewWindowRootView(
         // After screen displayOrientation changed or something, always close overlay view.
         if (isAttachedToWindow) {
             windowLayoutParams.x = windowClosePosX
+            windowLayoutParams.height = windowHeightClose
             windowManager.updateViewLayout(this, windowLayoutParams)
         }
     }
@@ -242,6 +259,10 @@ class WebViewWindowRootView(
                 MotionEvent.ACTION_DOWN -> {
                     onDownBasePosX = event.rawX.toInt()
                     onDownWinPosX = windowLayoutParams.x
+
+                    // If layout update is in progress, cancel it immediately.
+                    // Layout update will be triggered after touch up/cancel.
+                    windowPositionCorrectionTask?.let { App.ui.removeCallbacks(it) }
                 }
 
                 MotionEvent.ACTION_MOVE -> {
@@ -270,33 +291,28 @@ class WebViewWindowRootView(
                     onDownBasePosX = 0
                     onDownWinPosX = 0
 
-                    // Check.
-                    val task = windowPositionCorrectionTask
-                    if (task != null) {
-                        App.ui.removeCallbacks(task)
-                    }
-
                     // Fixed position.
                     val targetPoint: Point
                     if (displaySize.shortLine / 2 < event.rawX) {
                         // To be opened.
-                        targetPoint = Point(windowOpenPosX, windowLayoutParams.y)
+                        targetPoint = windowOpenPoint
                         windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
                     } else {
                         // To be closed.
-                        targetPoint = Point(windowClosePosX, windowLayoutParams.y)
+                        targetPoint = windowClosePoint
                         windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
                     }
 
                     // Start fix.
-                    val newTask = WindowPositionCorrectionTask(
+                    WindowPositionCorrectionTask(
                             this@WebViewWindowRootView,
                             targetPoint,
                             windowManager,
                             windowLayoutParams,
-                            App.ui)
-                    App.ui.post(newTask)
-                    windowPositionCorrectionTask = newTask
+                            App.ui).let {
+                        App.ui.post(it)
+                        windowPositionCorrectionTask = it
+                    }
                 }
 
                 else -> {
@@ -308,7 +324,7 @@ class WebViewWindowRootView(
         }
     }
 
-    private class WindowPositionCorrectionTask(
+    private inner class WindowPositionCorrectionTask(
             // Target.
             private val targetView: View,
             private val targetWindowPosit: Point,
@@ -318,9 +334,16 @@ class WebViewWindowRootView(
             private val ui: Handler) : Runnable {
         private val TAG = "WindowPositionCorrectionTask"
 
+        // Proportional gain.
+        private val P_GAIN = 0.2f
+
+        // Animation refresh interval.
+        private val WINDOW_ANIMATION_INTERVAL_MILLIS = 16
+
         // Last delta.
         private var lastDeltaX = 0
         private var lastDeltaY = 0
+        private var lastDeltaH = 0
 
         override fun run() {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "run() : E")
@@ -351,11 +374,68 @@ class WebViewWindowRootView(
                 winParams.x = targetWindowPosit.x
                 winParams.y = targetWindowPosit.y
 
-                winMng.updateViewLayout(
-                        targetView,
-                        winParams)
-                return
+                // On opened.
+                if (targetWindowPosit == windowOpenPoint) {
+                    if (Log.IS_DEBUG) Log.logDebug(TAG, "on Opened.")
+
+                    val layoutParams = web_view_container.layoutParams
+
+                    // Check window is fully expanded or not.
+                    if (layoutParams.height == windowHeightOpen) {
+                        // OK, Expansion is done.
+                        if (Log.IS_DEBUG) Log.logDebug(TAG, "Expansion DONE.")
+
+                        return
+                    } else {
+                        // NG. Update window and layout height to expand.
+                        if (Log.IS_DEBUG) Log.logDebug(TAG, "Expansion in progress.")
+
+                        if (winParams.height != windowHeightOpen) {
+                            // At first of window expansion, fix window size in advance,
+                            // after then, expand inner layout size with animation.
+                            if (Log.IS_DEBUG) Log.logDebug(TAG, "Expand window size in advance.")
+
+                            layoutParams.height = windowHeightClose
+                            web_view_container.layoutParams = layoutParams
+
+                            winParams.height = windowHeightOpen
+                            winMng.updateViewLayout(
+                                    targetView,
+                                    winParams)
+                        }
+
+                        val diff = windowHeightOpen - layoutParams.height
+
+                        if (diff == lastDeltaH) {
+                            // Consider layout is already fully expanded.
+                            layoutParams.height = windowHeightOpen
+                        } else {
+                            // Expansion in progress.
+                            layoutParams.height += (diff * P_GAIN).toInt()
+                        }
+                        web_view_container.layoutParams = layoutParams
+
+                        lastDeltaH = diff
+
+                        if (Log.IS_DEBUG) Log.logDebug(TAG, "LayoutH = ${web_view_container.layoutParams.height}")
+                    }
+                }
+
+                // On closed.
+                if (targetWindowPosit == windowClosePoint) {
+                    if (Log.IS_DEBUG) Log.logDebug(TAG, "on Closed.")
+
+                    winParams.height = windowHeightClose
+                    winMng.updateViewLayout(
+                            targetView,
+                            winParams)
+
+                    web_view_container.layoutParams.height = windowHeightClose
+
+                    return
+                }
             }
+
             lastDeltaX = dX
             lastDeltaY = dY
 
@@ -365,13 +445,6 @@ class WebViewWindowRootView(
             if (Log.IS_DEBUG) Log.logDebug(TAG, "run() : X")
         }
 
-        companion object {
-            // Proportional gain.
-            private const val P_GAIN = 0.2f
-
-            // Animation refresh interval.
-            private const val WINDOW_ANIMATION_INTERVAL_MILLIS = 16
-        }
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -425,6 +498,7 @@ class WebViewWindowRootView(
 
         // Grip width.
         private const val SLIDER_GRIP_WIDTH_PIX = 64
+        private const val SLIDER_GRIP_HEIGHT_PIX = 142
 
         // Hidden window position constants.
         private const val WINDOW_HIDDEN_POS_X = -5000
