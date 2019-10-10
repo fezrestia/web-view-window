@@ -153,13 +153,15 @@ class WebViewWindowRootView(
 
     @SuppressLint("RtlHardcoded")
     private fun updateWindowParams() {
-        windowLayoutParams.gravity = Gravity.LEFT or Gravity.CENTER_VERTICAL
+        windowLayoutParams.gravity = Gravity.LEFT or Gravity.TOP
 
         // Window size.
         when (displayOrientation) {
             Orientation.PORTRAIT -> {
                 windowLayoutParams.width = displaySize.shortLine
                 windowLayoutParams.height = (displaySize.longLine * SCREEN_LONG_LINE_CLEARANCE).toInt()
+
+                windowLayoutParams.y = (displaySize.longLine - windowLayoutParams.height) / 2
             }
 
             Orientation.LANDSCAPE -> {
@@ -170,7 +172,9 @@ class WebViewWindowRootView(
                 }
 
                 windowLayoutParams.width = (displaySize.longLine * SCREEN_LONG_LINE_CLEARANCE).toInt()
-                windowLayoutParams.height = displaySize.shortLine - statusBarHeight * 2
+                windowLayoutParams.height = displaySize.shortLine - statusBarHeight
+
+                windowLayoutParams.y = (displaySize.shortLine - windowLayoutParams.height) / 2
             }
         }
 
@@ -180,7 +184,6 @@ class WebViewWindowRootView(
 
         // Initial values
         windowLayoutParams.x = windowOpenPosX
-        windowLayoutParams.y = 0
 
         if (Log.IS_DEBUG) {
             val w = windowLayoutParams.width
