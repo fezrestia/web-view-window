@@ -4,13 +4,16 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Frame size descriptor.
+ * Rectangle coordinate for layout.
+ * Origin point is x-y point. Setting width/height is based on origin.
  *
  * @constructor
- * @param width Screen width.
- * @param height Screen height.
+ * @param x origin.
+ * @param y origin.
+ * @param width
+ * @param height
  */
-class FrameSize(val width: Int, val height: Int) {
+class LayoutRect(var x: Int, var y: Int, var width: Int, var height: Int) {
     /**
      * Get longer edge line length.
      *
@@ -28,6 +31,6 @@ class FrameSize(val width: Int, val height: Int) {
         get() = min(width, height)
 
     override fun toString(): String {
-        return "FrameSize= $width x $height"
+        return "LayoutRect : X-Y=${x}x${y} W-H=${width}x${height}"
     }
 }

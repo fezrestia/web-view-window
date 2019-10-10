@@ -19,7 +19,7 @@ import android.widget.FrameLayout
 
 import com.fezrestia.android.webviewwindow.Constants
 import com.fezrestia.android.webviewwindow.App
-import com.fezrestia.android.util.FrameSize
+import com.fezrestia.android.util.LayoutRect
 import com.fezrestia.android.util.Log
 import kotlinx.android.synthetic.main.overlay_root_view.view.*
 
@@ -32,7 +32,7 @@ class WebViewWindowRootView(
     private lateinit var webView: ExtendedWebView
 
     // Display size.
-    private lateinit var displaySize: FrameSize
+    private lateinit var displaySize: LayoutRect
 
     // Display orientation.
     private enum class Orientation {
@@ -45,17 +45,9 @@ class WebViewWindowRootView(
     private lateinit var windowManager: WindowManager
     private lateinit var windowLayoutParams: WindowManager.LayoutParams
 
-    // Window position.
-    private var windowOpenPosX = 0
-    private var windowClosePosX = 0
-
-    // Window height.
-    private var windowHeightOpen = 0
-    private var windowHeightClose = 0
-
-    // Window open/close point.
-    private var windowOpenPoint = Point(0, 0)
-    private var windowClosePoint = Point(0, 0)
+    // Window layout.
+    private val openedWindowLayout = LayoutRect(0, 0, 0, 0)
+    private val closedWindowLayout = LayoutRect(0, 0, 0, 0)
 
     // Window position correction animation.
     private var windowPositionCorrectionTask: WindowPositionCorrectionTask? = null
@@ -148,7 +140,7 @@ class WebViewWindowRootView(
         val size = Point()
         display.getSize(size)
 
-        displaySize = FrameSize(size.x, size.y)
+        displaySize = LayoutRect(0, 0, size.x, size.y)
         if (Log.IS_DEBUG) Log.logDebug(TAG, "updateDisplayConfig() : $displaySize")
 
         // Get display displayOrientation.
@@ -186,20 +178,18 @@ class WebViewWindowRootView(
             }
         }
 
-        // Window height.
-        windowHeightOpen = windowLayoutParams.height
-        windowHeightClose = SLIDER_GRIP_HEIGHT_PIX
-
-        // Window show/hide constants.
-        windowOpenPosX = 0
-        windowClosePosX = -1 * (windowLayoutParams.width - SLIDER_GRIP_WIDTH_PIX)
+        // Window open/close X-Y / W-H.
+        openedWindowLayout.x = 0
+        openedWindowLayout.y = windowLayoutParams.y
+        closedWindowLayout.x = -1 * (windowLayoutParams.width - SLIDER_GRIP_WIDTH_PIX)
+        closedWindowLayout.y = windowLayoutParams.y
+        openedWindowLayout.width = windowLayoutParams.width
+        openedWindowLayout.height = windowLayoutParams.height
+        closedWindowLayout.width = windowLayoutParams.width
+        closedWindowLayout.height = SLIDER_GRIP_HEIGHT_PIX
 
         // Initial values
-        windowLayoutParams.x = windowOpenPosX
-
-        // Open/Close point.
-        windowOpenPoint = Point(windowOpenPosX, windowLayoutParams.y)
-        windowClosePoint = Point(windowClosePosX, windowLayoutParams.y)
+        windowLayoutParams.x = openedWindowLayout.x
 
         if (Log.IS_DEBUG) {
             val w = windowLayoutParams.width
@@ -222,8 +212,8 @@ class WebViewWindowRootView(
 
         // After screen displayOrientation changed or something, always close overlay view.
         if (isAttachedToWindow) {
-            windowLayoutParams.x = windowClosePosX
-            windowLayoutParams.height = windowHeightClose
+            windowLayoutParams.x = closedWindowLayout.x
+            windowLayoutParams.height = closedWindowLayout.height
             windowManager.updateViewLayout(this, windowLayoutParams)
         }
     }
@@ -231,7 +221,7 @@ class WebViewWindowRootView(
     fun toggleShowHide() {
         if (windowLayoutParams.x == WINDOW_HIDDEN_POS_X) {
             // Show.
-            windowLayoutParams.x = windowClosePosX
+            windowLayoutParams.x = closedWindowLayout.x
             windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
         } else {
             // Hide.
@@ -271,11 +261,11 @@ class WebViewWindowRootView(
 
                     if (isAttachedToWindow) {
                         // Check limit.
-                        if (nextWinPosX < windowClosePosX) {
-                            nextWinPosX = windowClosePosX
+                        if (nextWinPosX < closedWindowLayout.x) {
+                            nextWinPosX = closedWindowLayout.x
                         }
-                        if (windowOpenPosX < nextWinPosX) {
-                            nextWinPosX = windowOpenPosX
+                        if (openedWindowLayout.x < nextWinPosX) {
+                            nextWinPosX = openedWindowLayout.x
                         }
 
                         // Update.
@@ -292,21 +282,21 @@ class WebViewWindowRootView(
                     onDownWinPosX = 0
 
                     // Fixed position.
-                    val targetPoint: Point
+                    val targetLayout: LayoutRect
                     if (displaySize.shortLine / 2 < event.rawX) {
                         // To be opened.
-                        targetPoint = windowOpenPoint
+                        targetLayout = openedWindowLayout
                         windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
                     } else {
                         // To be closed.
-                        targetPoint = windowClosePoint
+                        targetLayout = closedWindowLayout
                         windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
                     }
 
                     // Start fix.
                     WindowPositionCorrectionTask(
                             this@WebViewWindowRootView,
-                            targetPoint,
+                            targetLayout,
                             windowManager,
                             windowLayoutParams,
                             App.ui).let {
@@ -327,7 +317,7 @@ class WebViewWindowRootView(
     private inner class WindowPositionCorrectionTask(
             // Target.
             private val targetView: View,
-            private val targetWindowPosit: Point,
+            private val targetWindowLayout: LayoutRect,
             // Environment.
             private val winMng: WindowManager,
             private val winParams: WindowManager.LayoutParams,
@@ -348,8 +338,8 @@ class WebViewWindowRootView(
         override fun run() {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "run() : E")
 
-            val dX = targetWindowPosit.x - winParams.x
-            val dY = targetWindowPosit.y - winParams.y
+            val dX = targetWindowLayout.x - winParams.x
+            val dY = targetWindowLayout.y - winParams.y
 
             // Update layout.
             winParams.x += (dX * P_GAIN).toInt()
@@ -371,17 +361,17 @@ class WebViewWindowRootView(
                 if (Log.IS_DEBUG) Log.logDebug(TAG, "Already position fixed.")
 
                 // Fix position.
-                winParams.x = targetWindowPosit.x
-                winParams.y = targetWindowPosit.y
+                winParams.x = targetWindowLayout.x
+                winParams.y = targetWindowLayout.y
 
                 // On opened.
-                if (targetWindowPosit == windowOpenPoint) {
+                if (targetWindowLayout == openedWindowLayout) {
                     if (Log.IS_DEBUG) Log.logDebug(TAG, "on Opened.")
 
                     val layoutParams = web_view_container.layoutParams
 
                     // Check window is fully expanded or not.
-                    if (layoutParams.height == windowHeightOpen) {
+                    if (layoutParams.height == openedWindowLayout.height) {
                         // OK, Expansion is done.
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "Expansion DONE.")
 
@@ -390,25 +380,25 @@ class WebViewWindowRootView(
                         // NG. Update window and layout height to expand.
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "Expansion in progress.")
 
-                        if (winParams.height != windowHeightOpen) {
+                        if (winParams.height != openedWindowLayout.height) {
                             // At first of window expansion, fix window size in advance,
                             // after then, expand inner layout size with animation.
                             if (Log.IS_DEBUG) Log.logDebug(TAG, "Expand window size in advance.")
 
-                            layoutParams.height = windowHeightClose
+                            layoutParams.height = closedWindowLayout.height
                             web_view_container.layoutParams = layoutParams
 
-                            winParams.height = windowHeightOpen
+                            winParams.height = openedWindowLayout.height
                             winMng.updateViewLayout(
                                     targetView,
                                     winParams)
                         }
 
-                        val diff = windowHeightOpen - layoutParams.height
+                        val diff = openedWindowLayout.height - layoutParams.height
 
                         if (diff == lastDeltaH) {
                             // Consider layout is already fully expanded.
-                            layoutParams.height = windowHeightOpen
+                            layoutParams.height = openedWindowLayout.height
                         } else {
                             // Expansion in progress.
                             layoutParams.height += (diff * P_GAIN).toInt()
@@ -417,20 +407,20 @@ class WebViewWindowRootView(
 
                         lastDeltaH = diff
 
-                        if (Log.IS_DEBUG) Log.logDebug(TAG, "LayoutH = ${web_view_container.layoutParams.height}")
+                        if (Log.IS_DEBUG) Log.logDebug(TAG, "LayoutH = ${layoutParams.height}")
                     }
                 }
 
                 // On closed.
-                if (targetWindowPosit == windowClosePoint) {
+                if (targetWindowLayout == closedWindowLayout) {
                     if (Log.IS_DEBUG) Log.logDebug(TAG, "on Closed.")
 
-                    winParams.height = windowHeightClose
+                    winParams.height = closedWindowLayout.height
                     winMng.updateViewLayout(
                             targetView,
                             winParams)
 
-                    web_view_container.layoutParams.height = windowHeightClose
+                    web_view_container.layoutParams.height = closedWindowLayout.height
 
                     return
                 }
