@@ -215,6 +215,10 @@ class WebViewWindowRootView(
             windowLayoutParams.x = closedWindowLayout.x
             windowLayoutParams.height = closedWindowLayout.height
             windowManager.updateViewLayout(this, windowLayoutParams)
+            // Layout.
+            val containerParams = web_view_container.layoutParams
+            containerParams.height = closedWindowLayout.height
+            web_view_container.layoutParams = containerParams
         }
     }
 
