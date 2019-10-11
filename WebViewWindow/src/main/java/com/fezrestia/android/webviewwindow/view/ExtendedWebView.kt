@@ -75,7 +75,7 @@ class ExtendedWebView(
         setWebChromeClient(webChromeClient)
 
         // Debug.
-        setWebContentsDebuggingEnabled(true)
+//        setWebContentsDebuggingEnabled(true)
 
         // Web setting.
         val webSettings = settings
