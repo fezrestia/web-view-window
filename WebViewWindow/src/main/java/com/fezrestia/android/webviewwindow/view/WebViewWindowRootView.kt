@@ -13,7 +13,6 @@ import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
 
@@ -28,11 +27,10 @@ class WebViewWindowRootView(
         attrs: AttributeSet?,
         defStyle: Int) : FrameLayout(context, attrs, defStyle) {
 
-    // Web.
-    private lateinit var webView: ExtendedWebView
-
     // Display size.
     private lateinit var displaySize: LayoutRect
+    // Status bar.
+    private var statusBarSize = 0
 
     // Display orientation.
     private enum class Orientation {
@@ -76,24 +74,21 @@ class WebViewWindowRootView(
 
     private fun initializeInstances() {
         // Web view.
-        webView = ExtendedWebView(context)
-        webView.initialize()
+        web_view.initialize()
         val url = App.sp.getString(
                 Constants.SP_KEY_BASE_LOAD_URL,
                 Constants.DEFAULT_BASE_LOAD_URL) as String
         if (url.isEmpty()) {
-            webView.loadUrl(Constants.DEFAULT_BASE_LOAD_URL)
+            web_view.loadUrl(Constants.DEFAULT_BASE_LOAD_URL)
         } else {
-            webView.loadUrl(url)
+            web_view.loadUrl(url)
         }
-
-        val webViewParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT)
-        web_view_container.addView(webView, webViewParams)
 
         // Slider grip.
         slider_grip_container.setOnTouchListener(SliderGripTouchEventHandler())
+
+        // Resizer grip.
+        resizer_grip.setOnTouchListener(ResizerGripTouchEventHandler())
     }
 
     private fun createWindowParameters() {
@@ -112,8 +107,9 @@ class WebViewWindowRootView(
      */
     fun release() {
         slider_grip_container.setOnTouchListener(null)
+        resizer_grip.setOnTouchListener(null)
 
-        webView.release()
+        web_view.release()
     }
 
     /**
@@ -149,6 +145,11 @@ class WebViewWindowRootView(
         } else {
             Orientation.PORTRAIT
         }
+
+        val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
+        if (resourceId > 0) {
+            statusBarSize = resources.getDimensionPixelSize(resourceId)
+        }
     }
 
     @SuppressLint("RtlHardcoded")
@@ -165,37 +166,33 @@ class WebViewWindowRootView(
             }
 
             Orientation.LANDSCAPE -> {
-                var statusBarHeight = 0
-                val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
-                if (resourceId > 0) {
-                    statusBarHeight = resources.getDimensionPixelSize(resourceId)
-                }
-
                 windowLayoutParams.width = (displaySize.longLine * SCREEN_LONG_LINE_CLEARANCE).toInt()
-                windowLayoutParams.height = displaySize.shortLine - statusBarHeight * 2
+                windowLayoutParams.height = displaySize.shortLine - statusBarSize * 2
 
-                windowLayoutParams.y = statusBarHeight / 2
+                windowLayoutParams.y = statusBarSize / 2
             }
         }
 
         // Window open/close X-Y / W-H.
-        openedWindowLayout.x = 0
-        openedWindowLayout.y = windowLayoutParams.y
-        closedWindowLayout.x = -1 * (windowLayoutParams.width - SLIDER_GRIP_WIDTH_PIX)
-        closedWindowLayout.y = windowLayoutParams.y
-        openedWindowLayout.width = windowLayoutParams.width
-        openedWindowLayout.height = windowLayoutParams.height
-        closedWindowLayout.width = windowLayoutParams.width
-        closedWindowLayout.height = SLIDER_GRIP_HEIGHT_PIX
-
-        // Initial values
-        windowLayoutParams.x = openedWindowLayout.x
+        updateWindowOpenCloseLayoutParamsBasedOnCurrentWindowLayoutParams()
 
         if (Log.IS_DEBUG) {
             val w = windowLayoutParams.width
             val h = windowLayoutParams.height
             Log.logDebug(TAG, "updateWindowParams() : WinSize WxH = $w x $h")
         }
+    }
+
+    private fun updateWindowOpenCloseLayoutParamsBasedOnCurrentWindowLayoutParams() {
+        openedWindowLayout.x = 0
+        openedWindowLayout.y = windowLayoutParams.y
+        openedWindowLayout.width = windowLayoutParams.width
+        openedWindowLayout.height = windowLayoutParams.height
+
+        closedWindowLayout.x = -1 * (windowLayoutParams.width - SLIDER_GRIP_WIDTH_PIX)
+        closedWindowLayout.y = windowLayoutParams.y
+        closedWindowLayout.width = windowLayoutParams.width
+        closedWindowLayout.height = SLIDER_GRIP_HEIGHT_PIX
     }
 
     private fun updateLayoutParams() {
@@ -213,20 +210,28 @@ class WebViewWindowRootView(
         if (isAttachedToWindow) {
             // After screen displayOrientation changed or something, always close overlay view.
 
-            // Window.
-            windowLayoutParams.x = closedWindowLayout.x
-            windowLayoutParams.height = closedWindowLayout.height
-            windowManager.updateViewLayout(this, windowLayoutParams)
-
             // Layout.
             val containerParams = web_view_container.layoutParams
             containerParams.height = closedWindowLayout.height
             web_view_container.layoutParams = containerParams
 
-            webView.onPause()
+            // Window.
+            windowLayoutParams.x = closedWindowLayout.x
+            windowLayoutParams.height = closedWindowLayout.height
+            windowManager.updateViewLayout(this, windowLayoutParams)
+
+            // NOTICE:
+            // If pause WebView here, web content layout is fixed to previous orientation as is.
+            // So, not call onPause() here to update web content.
+//            web_view.onPause()
+
         } else {
+            // Initialize on attached to window.
+
+            windowLayoutParams.x = openedWindowLayout.x
+
             // Added to window manager as Opened state.
-            webView.onResume()
+            web_view.onResume()
         }
     }
 
@@ -277,26 +282,16 @@ class WebViewWindowRootView(
 
                 MotionEvent.ACTION_MOVE -> {
                     val diffX = event.rawX.toInt() - onDownBasePosX
-                    var nextWinPosX = onDownWinPosX + diffX
+                    val nextWinPosX = onDownWinPosX + diffX
 
-                    if (isAttachedToWindow) {
-                        // Check limit.
-                        if (nextWinPosX < closedWindowLayout.x) {
-                            nextWinPosX = closedWindowLayout.x
-                        }
-                        if (openedWindowLayout.x < nextWinPosX) {
-                            nextWinPosX = openedWindowLayout.x
-                        }
-
-                        // Update.
+                    // Check limit.
+                    if (nextWinPosX in closedWindowLayout.x..openedWindowLayout.x) {
                         windowLayoutParams.x = nextWinPosX
                         windowManager.updateViewLayout(this@WebViewWindowRootView, windowLayoutParams)
                     }
                 }
 
-                MotionEvent.ACTION_UP,
-                    // fall-through.
-                MotionEvent.ACTION_CANCEL -> {
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     // Reset.
                     onDownBasePosX = 0
                     onDownWinPosX = 0
@@ -308,13 +303,13 @@ class WebViewWindowRootView(
                         targetLayout = openedWindowLayout
                         windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
 
-                        webView.onResume()
+                        web_view.onResume()
                     } else {
                         // To be closed.
                         targetLayout = closedWindowLayout
                         windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
 
-                        webView.onPause()
+                        web_view.onPause()
                     }
 
                     // Start fix.
@@ -327,6 +322,95 @@ class WebViewWindowRootView(
                         App.ui.post(it)
                         windowPositionCorrectionTask = it
                     }
+                }
+
+                else -> {
+                    // NOP. Unexpected.
+                }
+            }
+
+            return true
+        }
+    }
+
+    private inner class ResizerGripTouchEventHandler : OnTouchListener {
+        private var onDownWinFlexLineSize = 0
+        private var onDownLayoutFlexLineSize = 0
+        private var onDownBasePosit = 0
+
+        @SuppressLint("ClickableViewAccessibility")
+        override fun onTouch(view: View, event: MotionEvent): Boolean {
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    when (displayOrientation) {
+                        Orientation.PORTRAIT -> {
+                            onDownWinFlexLineSize = windowLayoutParams.height
+                            onDownLayoutFlexLineSize = web_view_container.layoutParams.height
+                            onDownBasePosit = event.rawY.toInt()
+                        }
+                        Orientation.LANDSCAPE -> {
+                            onDownWinFlexLineSize = windowLayoutParams.width
+                            onDownLayoutFlexLineSize = web_view_container.layoutParams.width
+                            onDownBasePosit = event.rawX.toInt()
+                        }
+                    }
+
+                    // Hide grip during window resizing.
+                    slider_grip_container.visibility = INVISIBLE
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    val diff = when (displayOrientation) {
+                        Orientation.PORTRAIT -> {
+                            event.rawY.toInt() - onDownBasePosit
+                        }
+                        Orientation.LANDSCAPE -> {
+                            event.rawX.toInt() - onDownBasePosit
+                        }
+                    }
+
+                    val maxLimit = when (displayOrientation) {
+                        Orientation.PORTRAIT -> {
+                            displaySize.height - openedWindowLayout.y - statusBarSize
+                        }
+                        Orientation.LANDSCAPE -> {
+                            displaySize.width - openedWindowLayout.x
+                        }
+                    }
+
+                    val newWinFlexLineSize = onDownWinFlexLineSize + diff
+                    val newLayoutFlexLineSize = onDownLayoutFlexLineSize + diff
+
+                    if (newWinFlexLineSize in MIN_WINDOW_SIZE..maxLimit) {
+                        val layoutParams = web_view_container.layoutParams
+
+                        when (displayOrientation) {
+                            Orientation.PORTRAIT -> {
+                                layoutParams.height = newLayoutFlexLineSize
+                                windowLayoutParams.height = newWinFlexLineSize
+                            }
+                            Orientation.LANDSCAPE -> {
+                                layoutParams.width = newLayoutFlexLineSize
+                                windowLayoutParams.width = newWinFlexLineSize
+                            }
+                        }
+
+                        // Update layout size.
+                        web_view_container.layoutParams = layoutParams
+                        windowManager.updateViewLayout(this@WebViewWindowRootView, windowLayoutParams)
+                    }
+                }
+
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    // Update opened window layout parameters.
+                    updateWindowOpenCloseLayoutParamsBasedOnCurrentWindowLayoutParams()
+
+                    // Reset.
+                    onDownWinFlexLineSize = 0
+                    onDownLayoutFlexLineSize = 0
+                    onDownBasePosit = 0
+
+                    slider_grip_container.visibility = VISIBLE
                 }
 
                 else -> {
@@ -473,8 +557,8 @@ class WebViewWindowRootView(
                     if (Log.IS_DEBUG) Log.logDebug(TAG, "KEYCODE_BACK : UP")
 
                     // Go back on WebView.
-                    if (webView.canGoBack()) {
-                        webView.goBack()
+                    if (web_view.canGoBack()) {
+                        web_view.goBack()
                     }
                 }
 
@@ -509,6 +593,9 @@ class WebViewWindowRootView(
 
         // Screen long line clearance.
         private const val SCREEN_LONG_LINE_CLEARANCE = 0.8f
+
+        // Window size.
+        private const val MIN_WINDOW_SIZE = 256
 
         // Grip width.
         private const val SLIDER_GRIP_WIDTH_PIX = 64

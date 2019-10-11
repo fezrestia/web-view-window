@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
 import android.os.HandlerThread
+import android.util.AttributeSet
 import android.webkit.GeolocationPermissions
 import android.webkit.JavascriptInterface
 import android.webkit.PermissionRequest
@@ -22,7 +23,10 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 
-class ExtendedWebView(context: Context) : WebView(context) {
+class ExtendedWebView(
+        context: Context,
+        attrs: AttributeSet?,
+        defStyle: Int) : WebView(context, attrs, defStyle) {
     private lateinit var backHandlerThread: HandlerThread
     private lateinit var backHandler: Handler
 
@@ -41,6 +45,16 @@ class ExtendedWebView(context: Context) : WebView(context) {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "onReceiveValue() : $value")
             // NOP.
         }
+    }
+
+    // CONSTRUCTOR.
+    constructor(context: Context) : this(context, null) {
+        // NOP.
+    }
+
+    // CONSTRUCTOR.
+    constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0) {
+        // NOP.
     }
 
     /**
