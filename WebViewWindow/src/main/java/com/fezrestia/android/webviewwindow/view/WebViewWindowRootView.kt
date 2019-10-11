@@ -75,6 +75,7 @@ class WebViewWindowRootView(
     private fun initializeInstances() {
         // Web view.
         web_view.initialize()
+        web_view.onResume()
         val url = App.sp.getString(
                 Constants.SP_KEY_BASE_LOAD_URL,
                 Constants.DEFAULT_BASE_LOAD_URL) as String
@@ -98,7 +99,7 @@ class WebViewWindowRootView(
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                INTERACTIVE_WINDOW_FLAGS,
+                INTERACTIVE_WINDOW_FLAGS, // Initialize as opened state.
                 PixelFormat.TRANSLUCENT)
     }
 
@@ -208,43 +209,56 @@ class WebViewWindowRootView(
         updateLayoutParams()
 
         if (isAttachedToWindow) {
-            // After screen displayOrientation changed or something, always close overlay view.
+            val containerParams = web_view_container.layoutParams
 
             // Layout.
-            val containerParams = web_view_container.layoutParams
-            containerParams.height = closedWindowLayout.height
-            web_view_container.layoutParams = containerParams
+            if (windowLayoutParams.flags == INTERACTIVE_WINDOW_FLAGS) {
+                // Opened state.
+                containerParams.height = openedWindowLayout.height
+                windowLayoutParams.x = openedWindowLayout.x
+                windowLayoutParams.height = openedWindowLayout.height
+            } else {
+                // Closed or Hidden state.
 
-            // Window.
-            windowLayoutParams.x = closedWindowLayout.x
-            windowLayoutParams.height = closedWindowLayout.height
+                containerParams.height = closedWindowLayout.height
+                windowLayoutParams.x = closedWindowLayout.x
+                windowLayoutParams.height = closedWindowLayout.height
+
+                if (!web_view.isActive) {
+                    // Hidden state.
+                    windowLayoutParams.x = WINDOW_HIDDEN_POS_X
+                }
+            }
+
+            // Update layout.
+            web_view_container.layoutParams = containerParams
             windowManager.updateViewLayout(this, windowLayoutParams)
 
-            // NOTICE:
-            // If pause WebView here, web content layout is fixed to previous orientation as is.
-            // So, not call onPause() here to update web content.
-//            web_view.onPause()
-
         } else {
-            // Initialize on attached to window.
-
+            // Will be added to window manager as Opened state.
             windowLayoutParams.x = openedWindowLayout.x
-
-            // Added to window manager as Opened state.
-            web_view.onResume()
         }
     }
 
+    /**
+     * Toggle WebView window is on screen or not.
+     * If WebView window is not on screen even slider grip, WebView is paused.
+     * In other words, even if WebView window is closed, WebView is resumed.
+     */
     fun toggleShowHide() {
         when {
             windowLayoutParams.x == WINDOW_HIDDEN_POS_X -> {
                 // Hidden -> Closed.
                 windowLayoutParams.x = closedWindowLayout.x
+
+                web_view.onResume()
             }
 
             windowLayoutParams.x == closedWindowLayout.x -> {
                 // Closed -> Hidden.
                 windowLayoutParams.x = WINDOW_HIDDEN_POS_X
+
+                web_view.onPause()
             }
 
             else -> {
@@ -302,14 +316,10 @@ class WebViewWindowRootView(
                         // To be opened.
                         targetLayout = openedWindowLayout
                         windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
-
-                        web_view.onResume()
                     } else {
                         // To be closed.
                         targetLayout = closedWindowLayout
                         windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
-
-                        web_view.onPause()
                     }
 
                     // Start fix.

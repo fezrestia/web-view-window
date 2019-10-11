@@ -38,6 +38,10 @@ class ExtendedWebView(
     private val webViewClient = WebViewClientImpl()
     private val webChromeClient = WebChromeClientImpl()
 
+    /** Extended WebView is active or not. */
+    var isActive = false
+        private set
+
     private inner class EvalJsCallback : ValueCallback<String> {
         private val TAG = "EvalJsCallback"
 
@@ -103,6 +107,33 @@ class ExtendedWebView(
         reloadTask = ReloadTask()
     }
 
+    override fun onResume() {
+        super.onResume()
+        isActive = true
+    }
+
+    override fun onPause() {
+        isActive = false
+        super.onPause()
+    }
+
+    /**
+     * Release all references.
+     */
+    fun release() {
+        stopLoading()
+        clearCache(true)
+        destroy()
+
+        setWebViewClient(null)
+        setWebChromeClient(null)
+
+        App.ui.removeCallbacks(nopTask)
+        App.ui.removeCallbacks(reloadTask)
+
+        backHandlerThread.quitSafely()
+    }
+
     private fun loadJs(assetsName: String): String {
         var script = ""
 
@@ -123,23 +154,6 @@ class ExtendedWebView(
         }
 
         return script
-    }
-
-    /**
-     * Release all references.
-     */
-    fun release() {
-        stopLoading()
-        clearCache(true)
-        destroy()
-
-        setWebViewClient(null)
-        setWebChromeClient(null)
-
-        App.ui.removeCallbacks(nopTask)
-        App.ui.removeCallbacks(reloadTask)
-
-        backHandlerThread.quitSafely()
     }
 
     override fun reload() {
