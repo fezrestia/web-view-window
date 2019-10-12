@@ -286,12 +286,16 @@ class WebViewWindowRootView(
         override fun onTouch(v: View, event: MotionEvent): Boolean {
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    // Check valid.
+                    windowPositionCorrectionTask?.let {
+                        if (App.ui.hasCallbacks(it)) {
+                            // Now on transition. Ignore touch event.
+                            return false
+                        }
+                    }
+
                     onDownBasePosX = event.rawX.toInt()
                     onDownWinPosX = windowLayoutParams.x
-
-                    // If layout update is in progress, cancel it immediately.
-                    // Layout update will be triggered after touch up/cancel.
-                    windowPositionCorrectionTask?.let { App.ui.removeCallbacks(it) }
                 }
 
                 MotionEvent.ACTION_MOVE -> {
