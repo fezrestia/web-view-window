@@ -557,32 +557,35 @@ class WebViewWindowRootView(
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         when (event.keyCode) {
-            KeyEvent.KEYCODE_BACK -> when (event.action) {
-                KeyEvent.ACTION_DOWN -> {
-                    if (Log.IS_DEBUG) Log.logDebug(TAG, "KEYCODE_BACK : DOWN")
-                    // NOP.
-                }
+            KeyEvent.KEYCODE_BACK -> {
+                when (event.action) {
+                    KeyEvent.ACTION_DOWN -> {
+                        if (Log.IS_DEBUG) Log.logDebug(TAG, "KEYCODE_BACK : DOWN")
+                        // NOP.
+                    }
 
-                KeyEvent.ACTION_UP -> {
-                    if (Log.IS_DEBUG) Log.logDebug(TAG, "KEYCODE_BACK : UP")
+                    KeyEvent.ACTION_UP -> {
+                        if (Log.IS_DEBUG) Log.logDebug(TAG, "KEYCODE_BACK : UP")
 
-                    // Go back on WebView.
-                    if (web_view.canGoBack()) {
-                        web_view.goBack()
+                        // Go back on WebView.
+                        if (web_view.canGoBack()) {
+                            web_view.goBack()
+                        }
+                    }
+
+                    else -> {
+                        // NOP.
                     }
                 }
 
-                else -> {
-                    // NOP.
-                }
+                return true
             }
 
             else -> {
-                // NOP.
+                // Do not handle these events. Transfer them to lower window.
+                return false
             }
         }
-
-        return true
     }
 
     companion object {
