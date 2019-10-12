@@ -20,12 +20,18 @@ import com.fezrestia.android.webviewwindow.Constants
 import com.fezrestia.android.webviewwindow.App
 import com.fezrestia.android.util.LayoutRect
 import com.fezrestia.android.util.Log
+import com.fezrestia.android.webviewwindow.R
 import kotlinx.android.synthetic.main.overlay_root_view.view.*
+import kotlinx.android.synthetic.main.web_frame.view.*
 
 class WebViewWindowRootView(
         context: Context,
         attrs: AttributeSet?,
         defStyle: Int) : FrameLayout(context, attrs, defStyle) {
+
+    // Grip size.
+    private val SLIDER_GRIP_WIDTH_PIX = resources.getDimensionPixelSize(R.dimen.grip_width)
+    private val SLIDER_GRIP_HEIGHT_PIX = resources.getDimensionPixelSize(R.dimen.grip_height)
 
     // Display size.
     private lateinit var displaySize: LayoutRect
@@ -198,7 +204,7 @@ class WebViewWindowRootView(
 
     private fun updateLayoutParams() {
         val containerParams = web_view_container.layoutParams
-        containerParams.width = windowLayoutParams.width - SLIDER_GRIP_WIDTH_PIX
+        containerParams.width = windowLayoutParams.width
         containerParams.height = windowLayoutParams.height
         web_view_container.layoutParams = containerParams
     }
@@ -296,6 +302,9 @@ class WebViewWindowRootView(
 
                     onDownBasePosX = event.rawX.toInt()
                     onDownWinPosX = windowLayoutParams.x
+
+                    // Disable resizer.
+                    resizer_grip.visibility = INVISIBLE
                 }
 
                 MotionEvent.ACTION_MOVE -> {
@@ -497,6 +506,9 @@ class WebViewWindowRootView(
                         // OK, Expansion is done.
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "Expansion DONE.")
 
+                        // Enable resizer.
+                        resizer_grip.visibility = VISIBLE
+
                         return
                     } else {
                         // NG. Update window and layout height to expand.
@@ -613,10 +625,6 @@ class WebViewWindowRootView(
 
         // Window size.
         private const val MIN_WINDOW_SIZE = 256
-
-        // Grip width.
-        private const val SLIDER_GRIP_WIDTH_PIX = 64
-        private const val SLIDER_GRIP_HEIGHT_PIX = 142
 
         // Hidden window position constants.
         private const val WINDOW_HIDDEN_POS_X = -5000

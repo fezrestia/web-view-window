@@ -7,51 +7,25 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
 >
-    <!-- One web browser frame. -->
-    <LinearLayout
+    <!-- Web browser frames. -->
+    <FrameLayout
+        android:id="@+id/web_view_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal"
     >
-        <!-- Web View -->
-        <FrameLayout
-            android:id="@+id/web_view_container"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-        >
-            <com.fezrestia.android.webviewwindow.view.ExtendedWebView
-                android:id="@+id/web_view"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-            />
-            <ImageView
-                android:id="@+id/resizer_grip"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/resizer_grip"
-                android:layout_gravity="right|bottom"
-                android:contentDescription="@string/app_name"
-                tools:ignore="RtlHardcoded"
-            />
-        </FrameLayout>
 
-        <!-- Slider Grip -->
-        <FrameLayout
-            android:id="@+id/slider_grip_container"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-        >
-            <ImageView
-                    android:id="@+id/slider_grip"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/slider_grip"
-                    android:layout_gravity="left|top"
-                    android:contentDescription="@string/app_name"
-                    tools:ignore="RtlHardcoded"
-            />
-        </FrameLayout>
-    </LinearLayout>
+        <include layout="@layout/web_frame" />
+
+    </FrameLayout>
+
+    <!-- Resizer -->
+    <ImageView
+        android:id="@+id/resizer_grip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/resizer_grip"
+        android:layout_gravity="right|bottom"
+        android:contentDescription="@string/app_name"
+        tools:ignore="RtlHardcoded"
+    />
 </com.fezrestia.android.webviewwindow.view.WebViewWindowRootView>
