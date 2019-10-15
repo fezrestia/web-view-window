@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.graphics.Point
-import android.os.Handler
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.KeyEvent
@@ -54,7 +53,7 @@ class WebViewWindowRootView(
     private val closedWindowLayout = LayoutRect(0, 0, 0, 0)
 
     // Window position correction animation.
-    private var windowPositionCorrectionTask: WindowPositionCorrectionTask? = null
+    private var windowPositionCorrectionTask: WindowStateConvergentTask? = null
 
     // CONSTRUCTOR.
     constructor(context: Context) : this(context, null) {
@@ -336,12 +335,7 @@ class WebViewWindowRootView(
                     }
 
                     // Start fix.
-                    WindowPositionCorrectionTask(
-                            this@WebViewWindowRootView,
-                            targetLayout,
-                            windowManager,
-                            windowLayoutParams,
-                            App.ui).let {
+                    WindowStateConvergentTask(targetLayout).let {
                         App.ui.post(it)
                         windowPositionCorrectionTask = it
                     }
@@ -383,44 +377,43 @@ class WebViewWindowRootView(
                 }
 
                 MotionEvent.ACTION_MOVE -> {
-                    val diff = when (displayOrientation) {
+                    when (displayOrientation) {
                         Orientation.PORTRAIT -> {
-                            event.rawY.toInt() - onDownBasePosit
-                        }
-                        Orientation.LANDSCAPE -> {
-                            event.rawX.toInt() - onDownBasePosit
-                        }
-                    }
+                            val diff = event.rawY.toInt() - onDownBasePosit
+                            val maxLimit = displaySize.height - openedWindowLayout.y - statusBarSize
+                            val newWinFlexLineSize = onDownWinFlexLineSize + diff
+                            val newLayoutFlexLineSize = onDownLayoutFlexLineSize + diff
 
-                    val maxLimit = when (displayOrientation) {
-                        Orientation.PORTRAIT -> {
-                            displaySize.height - openedWindowLayout.y - statusBarSize
-                        }
-                        Orientation.LANDSCAPE -> {
-                            displaySize.width - openedWindowLayout.x
-                        }
-                    }
-
-                    val newWinFlexLineSize = onDownWinFlexLineSize + diff
-                    val newLayoutFlexLineSize = onDownLayoutFlexLineSize + diff
-
-                    if (newWinFlexLineSize in MIN_WINDOW_SIZE..maxLimit) {
-                        val layoutParams = web_view_container.layoutParams
-
-                        when (displayOrientation) {
-                            Orientation.PORTRAIT -> {
+                            if (newWinFlexLineSize in MIN_WINDOW_SIZE..maxLimit) {
+                                val layoutParams = web_view_container.layoutParams
                                 layoutParams.height = newLayoutFlexLineSize
                                 windowLayoutParams.height = newWinFlexLineSize
-                            }
-                            Orientation.LANDSCAPE -> {
-                                layoutParams.width = newLayoutFlexLineSize
-                                windowLayoutParams.width = newWinFlexLineSize
+
+                                // Update layout size.
+                                web_view_container.layoutParams = layoutParams
+                                windowManager.updateViewLayout(
+                                        this@WebViewWindowRootView,
+                                        windowLayoutParams)
                             }
                         }
+                        Orientation.LANDSCAPE -> {
+                            val diff = event.rawX.toInt() - onDownBasePosit
+                            val maxLimit = displaySize.width - openedWindowLayout.x
+                            val newWinFlexLineSize = onDownWinFlexLineSize + diff
+                            val newLayoutFlexLineSize = onDownLayoutFlexLineSize + diff
 
-                        // Update layout size.
-                        web_view_container.layoutParams = layoutParams
-                        windowManager.updateViewLayout(this@WebViewWindowRootView, windowLayoutParams)
+                            if (newWinFlexLineSize in MIN_WINDOW_SIZE..maxLimit) {
+                                val layoutParams = web_view_container.layoutParams
+                                layoutParams.width = newLayoutFlexLineSize
+                                windowLayoutParams.width = newWinFlexLineSize
+
+                                // Update layout size.
+                                web_view_container.layoutParams = layoutParams
+                                windowManager.updateViewLayout(
+                                        this@WebViewWindowRootView,
+                                        windowLayoutParams)
+                            }
+                        }
                     }
                 }
 
@@ -445,14 +438,8 @@ class WebViewWindowRootView(
         }
     }
 
-    private inner class WindowPositionCorrectionTask(
-            // Target.
-            private val targetView: View,
-            private val targetWindowLayout: LayoutRect,
-            // Environment.
-            private val winMng: WindowManager,
-            private val winParams: WindowManager.LayoutParams,
-            private val ui: Handler) : Runnable {
+    private inner class WindowStateConvergentTask(
+            private val targetWindowLayout: LayoutRect) : Runnable {
         private val TAG = "WindowPositionCorrectionTask"
 
         // Proportional gain.
@@ -469,17 +456,17 @@ class WebViewWindowRootView(
         override fun run() {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "run() : E")
 
-            val dX = targetWindowLayout.x - winParams.x
-            val dY = targetWindowLayout.y - winParams.y
+            val dX = targetWindowLayout.x - windowLayoutParams.x
+            val dY = targetWindowLayout.y - windowLayoutParams.y
 
             // Update layout.
-            winParams.x += (dX * P_GAIN).toInt()
-            winParams.y += (dY * P_GAIN).toInt()
+            windowLayoutParams.x += (dX * P_GAIN).toInt()
+            windowLayoutParams.y += (dY * P_GAIN).toInt()
 
-            if (targetView.isAttachedToWindow) {
-                winMng.updateViewLayout(
-                        targetView,
-                        winParams)
+            if (this@WebViewWindowRootView.isAttachedToWindow) {
+                windowManager.updateViewLayout(
+                        this@WebViewWindowRootView,
+                        windowLayoutParams)
             } else {
                 // Already detached from window.
                 if (Log.IS_DEBUG) Log.logDebug(TAG, "Already detached from window.")
@@ -492,8 +479,8 @@ class WebViewWindowRootView(
                 if (Log.IS_DEBUG) Log.logDebug(TAG, "Already position fixed.")
 
                 // Fix position.
-                winParams.x = targetWindowLayout.x
-                winParams.y = targetWindowLayout.y
+                windowLayoutParams.x = targetWindowLayout.x
+                windowLayoutParams.y = targetWindowLayout.y
 
                 // On opened.
                 if (targetWindowLayout == openedWindowLayout) {
@@ -514,7 +501,7 @@ class WebViewWindowRootView(
                         // NG. Update window and layout height to expand.
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "Expansion in progress.")
 
-                        if (winParams.height != openedWindowLayout.height) {
+                        if (windowLayoutParams.height != openedWindowLayout.height) {
                             // At first of window expansion, fix window size in advance,
                             // after then, expand inner layout size with animation.
                             if (Log.IS_DEBUG) Log.logDebug(TAG, "Expand window size in advance.")
@@ -522,10 +509,10 @@ class WebViewWindowRootView(
                             layoutParams.height = closedWindowLayout.height
                             web_view_container.layoutParams = layoutParams
 
-                            winParams.height = openedWindowLayout.height
-                            winMng.updateViewLayout(
-                                    targetView,
-                                    winParams)
+                            windowLayoutParams.height = openedWindowLayout.height
+                            windowManager.updateViewLayout(
+                                    this@WebViewWindowRootView,
+                                    windowLayoutParams)
                         }
 
                         val diff = openedWindowLayout.height - layoutParams.height
@@ -549,10 +536,10 @@ class WebViewWindowRootView(
                 if (targetWindowLayout == closedWindowLayout) {
                     if (Log.IS_DEBUG) Log.logDebug(TAG, "on Closed.")
 
-                    winParams.height = closedWindowLayout.height
-                    winMng.updateViewLayout(
-                            targetView,
-                            winParams)
+                    windowLayoutParams.height = closedWindowLayout.height
+                    windowManager.updateViewLayout(
+                            this@WebViewWindowRootView,
+                            windowLayoutParams)
 
                     web_view_container.layoutParams.height = closedWindowLayout.height
 
@@ -564,7 +551,7 @@ class WebViewWindowRootView(
             lastDeltaY = dY
 
             // Next.
-            ui.postDelayed(this, WINDOW_ANIMATION_INTERVAL_MILLIS.toLong())
+            App.ui.postDelayed(this, WINDOW_ANIMATION_INTERVAL_MILLIS.toLong())
 
             if (Log.IS_DEBUG) Log.logDebug(TAG, "run() : X")
         }
@@ -575,11 +562,6 @@ class WebViewWindowRootView(
         when (event.keyCode) {
             KeyEvent.KEYCODE_BACK -> {
                 when (event.action) {
-                    KeyEvent.ACTION_DOWN -> {
-                        if (Log.IS_DEBUG) Log.logDebug(TAG, "KEYCODE_BACK : DOWN")
-                        // NOP.
-                    }
-
                     KeyEvent.ACTION_UP -> {
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "KEYCODE_BACK : UP")
 
@@ -588,20 +570,14 @@ class WebViewWindowRootView(
                             web_view.goBack()
                         }
                     }
-
-                    else -> {
-                        // NOP.
-                    }
                 }
 
                 return true
             }
-
-            else -> {
-                // Do not handle these events. Transfer them to lower window.
-                return false
-            }
         }
+
+        // Fall back to default.
+        return super.dispatchKeyEvent(event)
     }
 
     companion object {
