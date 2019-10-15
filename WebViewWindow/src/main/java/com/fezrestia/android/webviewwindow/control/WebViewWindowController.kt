@@ -3,16 +3,36 @@
 package com.fezrestia.android.webviewwindow.control
 
 import com.fezrestia.android.util.Log
+import com.fezrestia.android.webviewwindow.view.WebViewWindowRootView
 
+/**
+ * Controller class.
+ *
+ * @constructor
+ *
+ */
 class WebViewWindowController {
+
+    private lateinit var view: WebViewWindowRootView
+
+    /**
+     * Release ALL references.
+     */
+    fun release() {
+        // NOP.
+    }
 
     /**
      * Start.
+     *
+     * @view
      */
-    fun start() {
+    fun start(view: WebViewWindowRootView) {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "start() : E")
 
         loadPreferences()
+
+        this.view = view
 
         if (Log.IS_DEBUG) Log.logDebug(TAG, "start() : X")
     }

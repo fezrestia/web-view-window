@@ -9,12 +9,12 @@
 >
     <!-- Web browser frames. -->
     <FrameLayout
-        android:id="@+id/web_view_container"
+        android:id="@+id/web_frame_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
     >
 
-        <include layout="@layout/web_frame" />
+        <!-- WebFrame will be added from code. -->
 
     </FrameLayout>
 

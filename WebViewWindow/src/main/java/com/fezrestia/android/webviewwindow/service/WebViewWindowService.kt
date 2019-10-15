@@ -2,7 +2,6 @@
 
 package com.fezrestia.android.webviewwindow.service
 
-import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -11,7 +10,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
-import android.view.LayoutInflater
 
 import com.fezrestia.android.webviewwindow.Constants
 import com.fezrestia.android.webviewwindow.R
@@ -57,13 +55,6 @@ class WebViewWindowService : Service() {
                 .build()
     }
 
-    @SuppressLint("InflateParams")
-    private fun inflateRootView(): WebViewWindowRootView {
-        return LayoutInflater.from(this).inflate(
-                R.layout.overlay_root_view,
-                null) as WebViewWindowRootView
-    }
-
     override fun onCreate() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onCreate() : E")
         super.onCreate()
@@ -74,11 +65,11 @@ class WebViewWindowService : Service() {
                 ONGOING_NOTIFICATION_ID,
                 getForegroundServiceNotification())
 
-        controller = WebViewWindowController()
-        controller.start()
-
-        view = inflateRootView()
+        view = WebViewWindowRootView.inflate(this)
         view.initialize()
+
+        controller = WebViewWindowController()
+        controller.start(view)
 
         App.isEnabled = true
 
@@ -94,6 +85,7 @@ class WebViewWindowService : Service() {
         view.release()
 
         controller.stop()
+        controller.release()
 
         stopForeground(true)
 
