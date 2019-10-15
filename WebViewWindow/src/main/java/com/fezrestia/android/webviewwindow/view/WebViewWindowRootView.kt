@@ -318,20 +318,29 @@ class WebViewWindowRootView(
                 }
 
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    // Reset.
-                    onDownBasePosX = 0
-                    onDownWinPosX = 0
+                    val onUpPosX = event.rawX.toInt()
+                    val diffX = onUpPosX - onDownBasePosX
 
-                    // Fixed position.
                     val targetLayout: LayoutRect
-                    if (displaySize.shortLine / 2 < event.rawX) {
-                        // To be opened.
-                        targetLayout = openedWindowLayout
-                        windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
-                    } else {
-                        // To be closed.
-                        targetLayout = closedWindowLayout
-                        windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
+
+                    if (0 < diffX) { // Open direction.
+                        val openThreshold = displaySize.width / 3
+                        if (openThreshold < onUpPosX) { // Do open.
+                            targetLayout = openedWindowLayout
+                            windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
+                        } else { // Stay closed.
+                            targetLayout = closedWindowLayout
+                            windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
+                        }
+                    } else { // Close direction.
+                        val closeThreshold = displaySize.width * 2 / 3
+                        if (onUpPosX < closeThreshold) { // Do close.
+                            targetLayout = closedWindowLayout
+                            windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
+                        } else { // Stay opened.
+                            targetLayout = openedWindowLayout
+                            windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
+                        }
                     }
 
                     // Start fix.
@@ -339,6 +348,10 @@ class WebViewWindowRootView(
                         App.ui.post(it)
                         windowPositionCorrectionTask = it
                     }
+
+                    // Reset.
+                    onDownBasePosX = 0
+                    onDownWinPosX = 0
                 }
 
                 else -> {
