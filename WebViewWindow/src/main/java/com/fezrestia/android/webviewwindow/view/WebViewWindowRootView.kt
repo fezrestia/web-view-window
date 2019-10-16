@@ -52,8 +52,8 @@ class WebViewWindowRootView(
     private val openedWindowLayout = LayoutRect(0, 0, 0, 0)
     private val closedWindowLayout = LayoutRect(0, 0, 0, 0)
 
-    // Window position correction animation.
-    private var windowPositionCorrectionTask: WindowStateConvergentTask? = null
+    // Animation per-frame task.
+    private var windowStateConvergentTask: WindowStateConvergentTask? = null
 
     // Web frames.
     private val webFrames: MutableList<WebFrame> = mutableListOf()
@@ -94,7 +94,9 @@ class WebViewWindowRootView(
 
         // First WebFrame.
         val webFrame = WebFrame.inflate(context)
-        webFrame.initialize(SliderGripTouchEventHandler(), baseUrl)
+        webFrame.initialize(
+                WebFrameCallbackImpl(),
+                baseUrl)
 
         webFrames.add(webFrame)
         web_frame_container.addView(webFrame)
@@ -291,83 +293,78 @@ class WebViewWindowRootView(
         updateTotalUserInterface()
     }
 
-    private inner class SliderGripTouchEventHandler : OnTouchListener {
+    private inner class WebFrameCallbackImpl : WebFrame.Callback {
+        private val TAG = "WebFrameCallbackImpl"
+
         private var onDownWinPosX = 0
-        private var onDownBasePosX = 0
 
-        @SuppressLint("ClickableViewAccessibility")
-        override fun onTouch(v: View, event: MotionEvent): Boolean {
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    // Check valid.
-                    windowPositionCorrectionTask?.let {
-                        if (App.ui.hasCallbacks(it)) {
-                            // Now on transition. Ignore touch event.
-                            return false
-                        }
-                    }
+        override fun onTabClicked() {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onTabClicked()")
 
-                    onDownBasePosX = event.rawX.toInt()
-                    onDownWinPosX = windowLayoutParams.x
+            // NOP.
 
-                    // Disable resizer.
-                    resizer_grip.visibility = INVISIBLE
+        }
+
+        override fun onSlideWindowStarted(startedRawPos: Point) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onSlideWindowStarted()")
+
+            // Remove old task
+            windowStateConvergentTask?.let {
+                App.ui.removeCallbacks(it)
+            }
+
+            onDownWinPosX = windowLayoutParams.x
+
+            // Disable resizer.
+            resizer_grip.visibility = INVISIBLE
+
+        }
+
+        override fun onSlideWindowOnGoing(startedRawPos: Point, diffPos: Point) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onSlideWindowOnGoing()")
+
+            val nextWinPosX = onDownWinPosX + diffPos.x
+
+            // Check limit.
+            if (nextWinPosX in closedWindowLayout.x..openedWindowLayout.x) {
+                windowLayoutParams.x = nextWinPosX
+                windowManager.updateViewLayout(this@WebViewWindowRootView, windowLayoutParams)
+            }
+        }
+
+        override fun onSlideWindowStopped(startedRawPos: Point, diffPos: Point, stoppedRawPos: Point) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onSlideWindowStopped()")
+
+            val targetLayout: LayoutRect
+
+            if (0 < diffPos.x) { // Open direction.
+                val openThreshold = displaySize.width / 3
+                if (openThreshold < stoppedRawPos.x) { // Do open.
+                    targetLayout = openedWindowLayout
+                    windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
+                } else { // Stay closed.
+                    targetLayout = closedWindowLayout
+                    windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
                 }
-
-                MotionEvent.ACTION_MOVE -> {
-                    val diffX = event.rawX.toInt() - onDownBasePosX
-                    val nextWinPosX = onDownWinPosX + diffX
-
-                    // Check limit.
-                    if (nextWinPosX in closedWindowLayout.x..openedWindowLayout.x) {
-                        windowLayoutParams.x = nextWinPosX
-                        windowManager.updateViewLayout(this@WebViewWindowRootView, windowLayoutParams)
-                    }
-                }
-
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    val onUpPosX = event.rawX.toInt()
-                    val diffX = onUpPosX - onDownBasePosX
-
-                    val targetLayout: LayoutRect
-
-                    if (0 < diffX) { // Open direction.
-                        val openThreshold = displaySize.width / 3
-                        if (openThreshold < onUpPosX) { // Do open.
-                            targetLayout = openedWindowLayout
-                            windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
-                        } else { // Stay closed.
-                            targetLayout = closedWindowLayout
-                            windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
-                        }
-                    } else { // Close direction.
-                        val closeThreshold = displaySize.width * 2 / 3
-                        if (onUpPosX < closeThreshold) { // Do close.
-                            targetLayout = closedWindowLayout
-                            windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
-                        } else { // Stay opened.
-                            targetLayout = openedWindowLayout
-                            windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
-                        }
-                    }
-
-                    // Start fix.
-                    WindowStateConvergentTask(targetLayout).let {
-                        App.ui.post(it)
-                        windowPositionCorrectionTask = it
-                    }
-
-                    // Reset.
-                    onDownBasePosX = 0
-                    onDownWinPosX = 0
-                }
-
-                else -> {
-                    // NOP. Unexpected.
+            } else { // Close direction.
+                val closeThreshold = displaySize.width * 2 / 3
+                if (stoppedRawPos.x < closeThreshold) { // Do close.
+                    targetLayout = closedWindowLayout
+                    windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
+                } else { // Stay opened.
+                    targetLayout = openedWindowLayout
+                    windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
                 }
             }
 
-            return true
+            // Start fix.
+            WindowStateConvergentTask(targetLayout).let {
+                App.ui.post(it)
+                windowStateConvergentTask = it
+            }
+
+            // Reset.
+            onDownWinPosX = 0
         }
     }
 
