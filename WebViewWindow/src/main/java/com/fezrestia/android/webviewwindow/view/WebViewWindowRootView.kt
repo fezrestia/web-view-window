@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.graphics.Point
+import android.os.Message
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.KeyEvent
@@ -78,32 +79,17 @@ class WebViewWindowRootView(
     fun initialize() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "initialize() : E")
 
-        initializeInstances()
-        createWindowParameters()
-
-        if (Log.IS_DEBUG) Log.logDebug(TAG, "initialize() : X")
-    }
-
-    private fun initializeInstances() {
-
-
-
-
-
-
-        // Resizer grip.
         resizer_grip.setOnTouchListener(ResizerGripTouchEventHandler())
-    }
 
-    private fun createWindowParameters() {
         windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-
         windowLayoutParams = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 INTERACTIVE_WINDOW_FLAGS, // Initialize as opened state.
                 PixelFormat.TRANSLUCENT)
+
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "initialize() : X")
     }
 
     /**
@@ -135,9 +121,9 @@ class WebViewWindowRootView(
     }
 
     /**
-     * Add new WebFrame to tail of stack.
+     * Add new WebFrame to tail of stack with default URL.
      */
-    fun addNewWebFrame() {
+    fun addNewWebFrameWithDefaultUrl() {
         var baseUrl = App.sp.getString(
                 Constants.SP_KEY_BASE_LOAD_URL,
                 Constants.DEFAULT_BASE_LOAD_URL) as String
@@ -145,15 +131,31 @@ class WebViewWindowRootView(
             baseUrl = Constants.DEFAULT_BASE_LOAD_URL
         }
 
+        addNewWebFrame(baseUrl, null)
+    }
+
+    /**
+     * Add new WebFrame to tail of stack with Transport message.
+     */
+    fun addNewWebFrameWithTransportMsg(msg: Message) {
+        addNewWebFrame(null, msg)
+    }
+
+    private fun addNewWebFrame(url: String?, msg: Message?) {
         val webFrame = WebFrame.inflate(context)
-        webFrame.initialize(
-                WebFrameCallbackImpl(),
-                baseUrl)
+        webFrame.initialize(WebFrameCallbackImpl())
 
         webFrames.add(webFrame)
         webFrame.setFrameOrder(webFrames.indexOf(webFrame), webFrames.size)
 
         web_frame_container.addView(webFrame)
+
+        if (url != null) {
+            webFrame.loadUrl(url)
+        }
+        if (msg != null) {
+            webFrame.loadMsg(msg)
+        }
 
         // TODO: Consider multi tab Z-order.
         topWebFrame = webFrame
@@ -379,6 +381,12 @@ class WebViewWindowRootView(
 
             // Reset.
             onDownWinPosX = 0
+        }
+
+        override fun onOpenNewWindowRequested(msg: Message) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onOpenNewWindowRequested()")
+
+            addNewWebFrameWithTransportMsg(msg)
         }
     }
 

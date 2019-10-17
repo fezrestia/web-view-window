@@ -4,17 +4,13 @@ package com.fezrestia.android.webviewwindow.view
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
+import android.net.http.SslError
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Message
 import android.util.AttributeSet
-import android.webkit.GeolocationPermissions
-import android.webkit.JavascriptInterface
-import android.webkit.PermissionRequest
-import android.webkit.ValueCallback
-import android.webkit.WebChromeClient
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.*
 
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.App
@@ -42,6 +38,15 @@ class ExtendedWebView(
     var isActive = false
         private set
 
+    private var callback: Callback? = null
+
+    /**
+     * Extended WebView callback interface.
+     */
+    interface Callback {
+        fun onNewWindowRequested(msg: Message)
+    }
+
     private inner class EvalJsCallback : ValueCallback<String> {
         private val TAG = "EvalJsCallback"
 
@@ -63,9 +68,13 @@ class ExtendedWebView(
 
     /**
      * Initialize.
+     *
+     * @param callback
      */
     @SuppressLint("SetJavaScriptEnabled")
-    fun initialize() {
+    fun initialize(callback: Callback) {
+        this.callback = callback
+
         backHandlerThread = HandlerThread("back-worker", Thread.NORM_PRIORITY)
         backHandlerThread.start()
         backHandler = Handler(backHandlerThread.looper)
@@ -79,24 +88,43 @@ class ExtendedWebView(
 
         // Web setting.
         val webSettings = settings
-        //        webSettings.setAllowContentAccess(true);
-        //        webSettings.setAllowFileAccess(true);
+        // Disable HTTP access.
+        webSettings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
+        // Enable tab browsing.
+        webSettings.setSupportMultipleWindows(true)
+        // Access permission.
+        webSettings.allowContentAccess = true
+        webSettings.allowFileAccess = true
         webSettings.allowFileAccessFromFileURLs = true
         webSettings.allowUniversalAccessFromFileURLs = true
+        // Enable cache.
         webSettings.setAppCacheEnabled(true)
-        //        webSettings.setBlockNetworkImage(false);
-        //        webSettings.setBlockNetworkLoads(false);
-        //        webSettings.setBuiltInZoomControls(false);
         webSettings.cacheMode = WebSettings.LOAD_DEFAULT
-        webSettings.databaseEnabled = true
+        webSettings.setAppCachePath(context.cacheDir.absolutePath)
+        // Enable resource load.
+        webSettings.blockNetworkImage = false
+        webSettings.blockNetworkLoads = false
+        webSettings.loadsImagesAutomatically = true
+        // Enable zoom.
+        webSettings.builtInZoomControls = true
         webSettings.displayZoomControls = false
+        // Enable database API.
+        webSettings.databaseEnabled = true
+        // Enable DOM API.
         webSettings.domStorageEnabled = true
+        // Enable location API.
         webSettings.setGeolocationEnabled(true)
+        // Enable Javascript.
         webSettings.javaScriptEnabled = true
-        //        webSettings.setLoadsImagesAutomatically(true);
-        //        webSettings.setUseWideViewPort(true);
-        //        webSettings.setUserAgentString("Desktop");
+        webSettings.javaScriptCanOpenWindowsAutomatically = true
+        // User Agent.
+        val old = webSettings.userAgentString
+        val pkgName = context.packageName
+        val pkgInfo = context.packageManager.getPackageInfo(pkgName, PackageManager.GET_META_DATA)
+        val verName = pkgInfo.versionName
+        webSettings.userAgentString = "$old WebViewWindow/$verName"
 
+        // Java Script Native Interface.
         addJavascriptInterface(JSNI, INJECTED_JAVA_SCRIPT_NATIVE_INTERFACE_OBJECT_NAME)
 
         // Java Script.
@@ -121,9 +149,13 @@ class ExtendedWebView(
      * Release all references.
      */
     fun release() {
+        callback = null
+
         stopLoading()
         clearCache(true)
         destroy()
+
+        removeJavascriptInterface(INJECTED_JAVA_SCRIPT_NATIVE_INTERFACE_OBJECT_NAME)
 
         setWebViewClient(null)
         setWebChromeClient(null)
@@ -218,6 +250,35 @@ class ExtendedWebView(
             if (Log.IS_DEBUG) Log.logDebug(TAG, "shouldOverrideUrlLoading() : X")
             return true
         }
+
+        override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+            if (Log.IS_DEBUG) {
+                Log.logDebug(TAG, "onReceivedError()")
+                Log.logDebug(TAG, "  ERR Code = ${error.errorCode}")
+                Log.logDebug(TAG, "  ERR Desc = ${error.description}")
+            }
+
+            if (request.isForMainFrame) {
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "onReceivedError() : for Main frame")
+
+                //TODO: Handle load error.
+
+            } else {
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "onReceivedError() : for other")
+                // NOP.
+            }
+        }
+
+        override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
+            if (Log.IS_DEBUG) {
+                Log.logDebug(TAG, "onReceivedSslError()")
+                Log.logDebug(TAG, "  URL = ${error.url}")
+                Log.logDebug(TAG, "  primaryError = ${error.primaryError}")
+            }
+
+            //TODO: Handle SSL Error.
+
+        }
     }
 
     private inner class WebChromeClientImpl : WebChromeClient() {
@@ -235,8 +296,38 @@ class ExtendedWebView(
             if (Log.IS_DEBUG) {
                 for (resource in request.resources) {
                     Log.logDebug(TAG, "    Permission=$resource")
+
+                    //TODO: Handle permission request.
+
                 }
             }
+        }
+
+        override fun onCreateWindow(
+                view: WebView,
+                isDialog: Boolean,
+                isUserGesture: Boolean,
+                resultMsg: Message): Boolean {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onCreateWindow()")
+
+            if (!isUserGesture) {
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "## isUserGesture == false")
+                // Maybe pop-up window. Do not handle it.
+                return false
+            }
+            if (isDialog) {
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "## isDialog == true")
+                // Dialog will be on same WebFrame.
+                return false
+            }
+
+            // Request new tab.
+            //TODO: Consider to open new window.
+//            if (Log.IS_DEBUG) Log.logDebug(TAG, "## Open new Window")
+//            callback?.onNewWindowRequested(resultMsg)
+//
+//            return true
+            return false
         }
     }
 

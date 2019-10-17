@@ -6,8 +6,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Point
 import android.graphics.Rect
+import android.os.Message
 import android.util.AttributeSet
 import android.view.*
+import android.webkit.WebView
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import com.fezrestia.android.util.Log
@@ -40,29 +42,53 @@ class WebFrame(
         fun onSlideWindowStarted(startedRawPos: Point)
         fun onSlideWindowOnGoing(startedRawPos: Point, diffPos: Point)
         fun onSlideWindowStopped(startedRawPos: Point, diffPos: Point, stoppedRawPos: Point)
+
+        fun onOpenNewWindowRequested(msg: Message)
+    }
+
+    private inner class ExtendedWebViewCallbackImpl : ExtendedWebView.Callback {
+        override fun onNewWindowRequested(msg: Message) {
+            callback?.onOpenNewWindowRequested(msg)
+        }
     }
 
     /**
      * Initialize WebFrame.
      *
      * @param callback
-     * @param baseUrl
      */
-    fun initialize(
-            callback: Callback,
-            baseUrl: String) {
+    fun initialize(callback: Callback) {
         this.callback = callback
 
         // Web view.
-        web_view.initialize()
+        web_view.initialize(ExtendedWebViewCallbackImpl())
         web_view.onResume()
-        web_view.loadUrl(baseUrl)
 
         // Slider grip.
         slider_grip.setOnTouchListener(SliderGripTouchEventListenerImpl())
 
         // Per-layout process.
         viewTreeObserver.addOnGlobalLayoutListener(LayoutObserverImpl())
+    }
+
+    /**
+     * Start loading URL.
+     *
+     * @param url
+     */
+    fun loadUrl(url: String) {
+        web_view.loadUrl(url)
+    }
+
+    /**
+     * Start loading with WebViewTransport message.
+     *
+     * @param msg
+     */
+    fun loadMsg(msg: Message) {
+        val transport = msg.obj as WebView.WebViewTransport
+        transport.webView = web_view
+        msg.sendToTarget()
     }
 
     /**
