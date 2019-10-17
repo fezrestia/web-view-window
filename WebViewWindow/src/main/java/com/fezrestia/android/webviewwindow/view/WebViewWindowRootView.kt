@@ -23,6 +23,7 @@ import com.fezrestia.android.util.LayoutRect
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.R
 import kotlinx.android.synthetic.main.overlay_root_view.view.*
+import kotlin.math.max
 
 class WebViewWindowRootView(
         context: Context,
@@ -96,9 +97,10 @@ class WebViewWindowRootView(
      * Release all resources.
      */
     fun release() {
-        web_frame_container.removeAllViews()
-        webFrames.forEach(WebFrame::release)
-        webFrames.clear()
+        webFrames.forEach { webFrame ->
+            removeWebFrame(webFrame)
+        }
+
         resizer_grip.setOnTouchListener(null)
     }
 
@@ -142,24 +144,40 @@ class WebViewWindowRootView(
     }
 
     private fun addNewWebFrame(url: String?, msg: Message?) {
-        val webFrame = WebFrame.inflate(context)
-        webFrame.initialize(WebFrameCallbackImpl())
+        val newWebFrame = WebFrame.inflate(context)
+        newWebFrame.initialize(WebFrameCallbackImpl())
 
-        webFrames.add(webFrame)
-        webFrame.setFrameOrder(webFrames.indexOf(webFrame), webFrames.size)
+        webFrames.add(newWebFrame)
+        newWebFrame.setFrameOrder(webFrames.indexOf(newWebFrame), webFrames.size)
 
-        web_frame_container.addView(webFrame)
+        web_frame_container.addView(newWebFrame)
 
         if (url != null) {
-            webFrame.loadUrl(url)
+            newWebFrame.loadUrl(url)
         }
         if (msg != null) {
-            webFrame.loadMsg(msg)
+            newWebFrame.loadMsg(msg)
         }
 
-        // TODO: Consider multi tab Z-order.
-        topWebFrame = webFrame
+        // Add new frame as top.
+        topWebFrame = newWebFrame
 
+        updateOrderZ()
+    }
+
+    private fun updateOrderZ() {
+        // Set ALL frame to low Z-order.
+        webFrames.forEach { webFrame ->
+            webFrame.elevation = -1.0f
+        }
+        // Set top WebFrame elevation.
+        topWebFrame.elevation = 0.0f
+    }
+
+    private fun removeWebFrame(webFrame: WebFrame) {
+        web_frame_container.removeView(webFrame)
+        webFrames.remove(webFrame)
+        webFrame.release()
     }
 
     private fun updateDisplayConfig() {
@@ -314,11 +332,12 @@ class WebViewWindowRootView(
 
         private var onDownWinPosX = 0
 
-        override fun onTabClicked() {
-            if (Log.IS_DEBUG) Log.logDebug(TAG, "onTabClicked()")
+        override fun onTabClicked(frameOrder: Int) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onTabClicked() : frameOrder=$frameOrder")
 
-            // NOP.
+            topWebFrame = webFrames[frameOrder]
 
+            updateOrderZ()
         }
 
         override fun onSlideWindowStarted(startedRawPos: Point) {
@@ -607,7 +626,26 @@ class WebViewWindowRootView(
 
                         // Go back on WebView.
                         if (topWebFrame.canGoBack()) {
+                            if (Log.IS_DEBUG) Log.logDebug(TAG, "## Go back")
                             topWebFrame.goBack()
+                        } else {
+                            // Already first page.
+
+                            if (webFrames.size != 1) {
+                                // This frame is NOT last one.
+                                if (Log.IS_DEBUG) Log.logDebug(TAG, "## Remove current WebFrame")
+
+                                val curTopOrder = webFrames.indexOf(topWebFrame)
+                                removeWebFrame(topWebFrame)
+                                val nextTopOrder = max(0, curTopOrder - 1)
+                                topWebFrame = webFrames[nextTopOrder]
+
+                                updateOrderZ()
+
+                            } else {
+                                // NOP. This is last one frame. Do NOT remove this.
+                                if (Log.IS_DEBUG) Log.logDebug(TAG, "## Do NOT remove last one")
+                            }
                         }
                     }
                 }

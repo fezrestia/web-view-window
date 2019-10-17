@@ -37,7 +37,7 @@ class WebFrame(
      * WebFrame related event callback interface.
      */
     interface Callback {
-        fun onTabClicked()
+        fun onTabClicked(frameOrder: Int)
 
         fun onSlideWindowStarted(startedRawPos: Point)
         fun onSlideWindowOnGoing(startedRawPos: Point, diffPos: Point)
@@ -157,7 +157,7 @@ class WebFrame(
                         // Not dragged. Maybe clicked.
                         if (abs(diffX(curX)) < TOUCH_SLOP && abs(diffY(curY)) < TOUCH_SLOP) {
                             performClick()
-                            callback?.onTabClicked()
+                            callback?.onTabClicked(frameOrder)
                         }
                     }
 

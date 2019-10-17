@@ -322,12 +322,10 @@ class ExtendedWebView(
             }
 
             // Request new tab.
-            //TODO: Consider to open new window.
-//            if (Log.IS_DEBUG) Log.logDebug(TAG, "## Open new Window")
-//            callback?.onNewWindowRequested(resultMsg)
-//
-//            return true
-            return false
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "## Open new Window")
+            callback?.onNewWindowRequested(resultMsg)
+
+            return true
         }
     }
 
