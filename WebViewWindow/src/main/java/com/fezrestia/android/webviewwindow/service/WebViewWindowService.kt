@@ -104,6 +104,7 @@ class WebViewWindowService : Service() {
             when (intent.action) {
                 Constants.INTENT_ACTION_START_OVERLAY_WINDOW -> {
                     view.addToOverlayWindow()
+                    view.addNewWebFrame()
                 }
 
                 Constants.INTENT_ACTION_STOP_OVERLAY_WINDOW -> {

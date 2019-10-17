@@ -1,20 +1,20 @@
-@file:Suppress("PrivatePropertyName")
+@file:Suppress("PrivatePropertyName", "ConstantConditionIf")
 
 package com.fezrestia.android.webviewwindow.view
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Point
+import android.graphics.Rect
 import android.util.AttributeSet
-import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewConfiguration
+import android.view.*
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.R
 import kotlinx.android.synthetic.main.web_frame.view.*
 import kotlin.math.abs
+import kotlin.math.min
 
 class WebFrame(
         context: Context,
@@ -24,8 +24,12 @@ class WebFrame(
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
 
     private val TOUCH_SLOP: Int = ViewConfiguration.get(context).scaledTouchSlop
+    private val SLIDER_GRIP_HEIGHT_PIX = resources.getDimensionPixelSize(R.dimen.grip_height)
 
     private var callback: Callback? = null
+
+    private var frameOrder: Int = 0
+    private var totalFrameCount: Int = 0
 
     /**
      * WebFrame related event callback interface.
@@ -56,6 +60,9 @@ class WebFrame(
 
         // Slider grip.
         slider_grip.setOnTouchListener(SliderGripTouchEventListenerImpl())
+
+        // Per-layout process.
+        viewTreeObserver.addOnGlobalLayoutListener(LayoutObserverImpl())
     }
 
     /**
@@ -139,6 +146,47 @@ class WebFrame(
         }
     }
 
+    /**
+     * Order of this WebFrame.
+     *
+     * @param order 0 means top WebFrame.
+     * @param total Count of WebFrames.
+     */
+    fun setFrameOrder(order: Int, total: Int) {
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "setFrameOrder() : order=$order, total=$total")
+
+        frameOrder = order
+        totalFrameCount = total
+    }
+
+    private fun updateSliderGripPosition() {
+        val curRect = Rect()
+        getLocalVisibleRect(curRect)
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "## Frame WxH = ${curRect.width()} x ${curRect.height()}")
+
+        val tabRange = curRect.height() - SLIDER_GRIP_HEIGHT_PIX //
+        val topMargin = min(tabRange / totalFrameCount, SLIDER_GRIP_HEIGHT_PIX) * frameOrder
+        if (Log.IS_DEBUG) {
+            Log.logDebug(TAG, "## tabRange = $tabRange")
+            Log.logDebug(TAG, "## topMargin = $topMargin")
+        }
+
+        // Grip position.
+        val layoutParams = slider_grip.layoutParams as FrameLayout.LayoutParams
+        layoutParams.topMargin = topMargin
+        slider_grip.layoutParams = layoutParams
+    }
+
+    private inner class LayoutObserverImpl : ViewTreeObserver.OnGlobalLayoutListener {
+        private val TAG = "LayoutObserverImpl"
+
+        override fun onGlobalLayout() {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onGlobalLayout()")
+
+            updateSliderGripPosition()
+        }
+    }
+
     fun isActive(): Boolean { return web_view.isActive }
     fun onResume() { web_view.onResume() }
     fun onPause() { web_view.onPause() }
@@ -154,6 +202,8 @@ class WebFrame(
     }
 
     companion object {
+        private const val TAG = "WebFrame"
+
         @SuppressLint("InflateParams")
         fun inflate(context: Context): WebFrame {
             return LayoutInflater.from(context).inflate(

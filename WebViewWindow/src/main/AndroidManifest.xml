@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.fezrestia.android.webviewwindow"
 
-    android:versionCode="130"
-    android:versionName="0.0.15-130"
+    android:versionCode="139"
+    android:versionName="0.0.15-139"
 >
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />

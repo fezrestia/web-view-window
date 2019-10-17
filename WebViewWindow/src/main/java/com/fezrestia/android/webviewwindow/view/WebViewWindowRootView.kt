@@ -85,23 +85,11 @@ class WebViewWindowRootView(
     }
 
     private fun initializeInstances() {
-        var baseUrl = App.sp.getString(
-                Constants.SP_KEY_BASE_LOAD_URL,
-                Constants.DEFAULT_BASE_LOAD_URL) as String
-        if (baseUrl.isEmpty()) {
-            baseUrl = Constants.DEFAULT_BASE_LOAD_URL
-        }
 
-        // First WebFrame.
-        val webFrame = WebFrame.inflate(context)
-        webFrame.initialize(
-                WebFrameCallbackImpl(),
-                baseUrl)
 
-        webFrames.add(webFrame)
-        web_frame_container.addView(webFrame)
 
-        topWebFrame = webFrame
+
+
 
         // Resizer grip.
         resizer_grip.setOnTouchListener(ResizerGripTouchEventHandler())
@@ -144,6 +132,32 @@ class WebViewWindowRootView(
      */
     fun removeFromOverlayWindow() {
         windowManager.removeView(this)
+    }
+
+    /**
+     * Add new WebFrame to tail of stack.
+     */
+    fun addNewWebFrame() {
+        var baseUrl = App.sp.getString(
+                Constants.SP_KEY_BASE_LOAD_URL,
+                Constants.DEFAULT_BASE_LOAD_URL) as String
+        if (baseUrl.isEmpty()) {
+            baseUrl = Constants.DEFAULT_BASE_LOAD_URL
+        }
+
+        val webFrame = WebFrame.inflate(context)
+        webFrame.initialize(
+                WebFrameCallbackImpl(),
+                baseUrl)
+
+        webFrames.add(webFrame)
+        webFrame.setFrameOrder(webFrames.indexOf(webFrame), webFrames.size)
+
+        web_frame_container.addView(webFrame)
+
+        // TODO: Consider multi tab Z-order.
+        topWebFrame = webFrame
+
     }
 
     private fun updateDisplayConfig() {
