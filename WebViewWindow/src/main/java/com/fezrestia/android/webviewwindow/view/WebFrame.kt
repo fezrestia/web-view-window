@@ -188,14 +188,14 @@ class WebFrame(
     private fun updateSliderGripPosition() {
         val curRect = Rect()
         getLocalVisibleRect(curRect)
-        if (Log.IS_DEBUG) Log.logDebug(TAG, "## Frame WxH = ${curRect.width()} x ${curRect.height()}")
+//        if (Log.IS_DEBUG) Log.logDebug(TAG, "## Frame WxH = ${curRect.width()} x ${curRect.height()}")
 
         val tabRange = curRect.height() - SLIDER_GRIP_HEIGHT_PIX //
         val topMargin = min(tabRange / totalFrameCount, SLIDER_GRIP_HEIGHT_PIX) * frameOrder
-        if (Log.IS_DEBUG) {
-            Log.logDebug(TAG, "## tabRange = $tabRange")
-            Log.logDebug(TAG, "## topMargin = $topMargin")
-        }
+//        if (Log.IS_DEBUG) {
+//            Log.logDebug(TAG, "## tabRange = $tabRange")
+//            Log.logDebug(TAG, "## topMargin = $topMargin")
+//        }
 
         // Grip position.
         val layoutParams = slider_grip.layoutParams as FrameLayout.LayoutParams
@@ -207,7 +207,7 @@ class WebFrame(
         private val TAG = "LayoutObserverImpl"
 
         override fun onGlobalLayout() {
-            if (Log.IS_DEBUG) Log.logDebug(TAG, "onGlobalLayout()")
+//            if (Log.IS_DEBUG) Log.logDebug(TAG, "onGlobalLayout()")
 
             updateSliderGripPosition()
         }

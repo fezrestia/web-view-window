@@ -239,16 +239,16 @@ class ExtendedWebView(
             // NOP.
         }
 
-        override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
+        override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
             if (Log.IS_DEBUG) {
                 Log.logDebug(TAG, "shouldOverrideUrlLoading() : E")
-                Log.logDebug(TAG, "URL=$url")
+                Log.logDebug(TAG, "URL=${request.url}")
             }
 
-            this@ExtendedWebView.loadUrl(url)
+            // NOP.
 
             if (Log.IS_DEBUG) Log.logDebug(TAG, "shouldOverrideUrlLoading() : X")
-            return true
+            return false
         }
 
         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
