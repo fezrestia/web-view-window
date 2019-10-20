@@ -100,8 +100,9 @@ class WebViewWindowRootView(
      * Release all resources.
      */
     fun release() {
-        webFrames.forEach { webFrame ->
-            removeWebFrame(webFrame)
+        val frames = webFrames.toTypedArray()
+        frames.forEach { frame ->
+            removeWebFrame(frame)
         }
 
         resizer_grip.setOnTouchListener(null)
