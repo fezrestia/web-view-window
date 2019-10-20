@@ -18,14 +18,32 @@
 
     </FrameLayout>
 
-    <!-- Resizer -->
-    <ImageView
-        android:id="@+id/resizer_grip"
+    <!-- Right-Bottom icon list -->
+    <LinearLayout
+        android:id="@+id/right_bottom_icon_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/resizer_grip"
+        android:orientation="vertical"
         android:layout_gravity="right|bottom"
-        android:contentDescription="@string/app_name"
         tools:ignore="RtlHardcoded"
-    />
+    >
+        <!-- Add new WebFrame button -->
+        <ImageView
+            android:id="@+id/add_new_web_frame_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/add_new_web_frame_button"
+            android:contentDescription="@string/app_name"
+        />
+
+        <!-- Resizer -->
+        <ImageView
+            android:id="@+id/resizer_grip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/resizer_grip"
+            android:contentDescription="@string/app_name"
+        />
+    </LinearLayout>
+
 </com.fezrestia.android.webviewwindow.view.WebViewWindowRootView>

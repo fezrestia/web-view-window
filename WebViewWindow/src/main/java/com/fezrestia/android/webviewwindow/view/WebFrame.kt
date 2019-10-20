@@ -29,9 +29,11 @@ class WebFrame(
     private val SLIDER_GRIP_HEIGHT_PIX = resources.getDimensionPixelSize(R.dimen.grip_height)
 
     private var callback: Callback? = null
+    private var rightBottomIconsContainerHeight: Int = 0
 
     private var frameOrder: Int = 0
     private var totalFrameCount: Int = 0
+    private var isTopFrame: Boolean = true
 
     /**
      * WebFrame related event callback interface.
@@ -56,9 +58,11 @@ class WebFrame(
      * Initialize WebFrame.
      *
      * @param callback
+     * @param rightBottomIconsContainerHeight
      */
-    fun initialize(callback: Callback) {
+    fun initialize(callback: Callback, rightBottomIconsContainerHeight:Int) {
         this.callback = callback
+        this.rightBottomIconsContainerHeight = rightBottomIconsContainerHeight
 
         // Web view.
         web_view.initialize(ExtendedWebViewCallbackImpl())
@@ -175,40 +179,64 @@ class WebFrame(
     /**
      * Order of this WebFrame.
      *
-     * @param order 0 means top WebFrame.
-     * @param total Count of WebFrames.
+     * @param frameOrder 0 means top WebFrame.
+     * @param totalFrameCount Count of WebFrames.
+     * @param isTopFrame
      */
-    fun setFrameOrder(order: Int, total: Int) {
-        if (Log.IS_DEBUG) Log.logDebug(TAG, "setFrameOrder() : order=$order, total=$total")
+    fun setFrameOrder(frameOrder: Int, totalFrameCount: Int, isTopFrame: Boolean) {
+        if (Log.IS_DEBUG) {
+            Log.logDebug(TAG, "setFrameOrder()")
+            Log.logDebug(TAG, "## frameOrder = $frameOrder")
+            Log.logDebug(TAG, "## totalFrameCount = $totalFrameCount")
+            Log.logDebug(TAG, "## isTopFrame = $isTopFrame")
+        }
 
-        frameOrder = order
-        totalFrameCount = total
+        this.frameOrder = frameOrder
+        this.totalFrameCount = totalFrameCount
+        this.isTopFrame = isTopFrame
     }
 
     private fun updateSliderGripPosition() {
         val curRect = Rect()
         getLocalVisibleRect(curRect)
-//        if (Log.IS_DEBUG) Log.logDebug(TAG, "## Frame WxH = ${curRect.width()} x ${curRect.height()}")
 
-        val tabRange = curRect.height() - SLIDER_GRIP_HEIGHT_PIX //
-        val topMargin = min(tabRange / totalFrameCount, SLIDER_GRIP_HEIGHT_PIX) * frameOrder
-//        if (Log.IS_DEBUG) {
-//            Log.logDebug(TAG, "## tabRange = $tabRange")
-//            Log.logDebug(TAG, "## topMargin = $topMargin")
-//        }
+        if (Log.IS_DEBUG) {
+            Log.logDebug(TAG, "## WebFrame WxH = ${curRect.width()} x ${curRect.height()}")
+        }
+
+        val topMargin: Int
+        if (totalFrameCount == 1) {
+            // Only 1 frame.
+            topMargin = 0
+
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "## Top frame")
+        } else {
+            val tabRange = curRect.height() - SLIDER_GRIP_HEIGHT_PIX - rightBottomIconsContainerHeight
+            val tabStep = min(tabRange / (totalFrameCount - 1), SLIDER_GRIP_HEIGHT_PIX)
+            topMargin = tabStep * frameOrder
+
+            if (Log.IS_DEBUG) {
+                Log.logDebug(TAG, "## tabRange = $tabRange")
+                Log.logDebug(TAG, "## tabStep = $tabStep")
+                Log.logDebug(TAG, "## topMargin = $topMargin")
+            }
+        }
 
         // Grip position.
         val layoutParams = slider_grip.layoutParams as FrameLayout.LayoutParams
         layoutParams.topMargin = topMargin
         slider_grip.layoutParams = layoutParams
+
+        // Grip icon.
+        if (isTopFrame) {
+            slider_grip.setImageResource(R.drawable.slider_grip_selected)
+        } else {
+            slider_grip.setImageResource(R.drawable.slider_grip)
+        }
     }
 
     private inner class LayoutObserverImpl : ViewTreeObserver.OnGlobalLayoutListener {
-        private val TAG = "LayoutObserverImpl"
-
         override fun onGlobalLayout() {
-//            if (Log.IS_DEBUG) Log.logDebug(TAG, "onGlobalLayout()")
-
             updateSliderGripPosition()
         }
     }

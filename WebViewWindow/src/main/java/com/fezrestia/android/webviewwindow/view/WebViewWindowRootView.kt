@@ -23,6 +23,7 @@ import com.fezrestia.android.util.LayoutRect
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.R
 import kotlinx.android.synthetic.main.overlay_root_view.view.*
+import kotlin.math.abs
 import kotlin.math.max
 
 class WebViewWindowRootView(
@@ -82,6 +83,8 @@ class WebViewWindowRootView(
 
         resizer_grip.setOnTouchListener(ResizerGripTouchEventHandler())
 
+        add_new_web_frame_button.setOnClickListener(AddNewWebFrameButtonOnClickListenerImpl())
+
         windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         windowLayoutParams = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -102,6 +105,7 @@ class WebViewWindowRootView(
         }
 
         resizer_grip.setOnTouchListener(null)
+        add_new_web_frame_button.setOnClickListener(null)
     }
 
     /**
@@ -145,11 +149,9 @@ class WebViewWindowRootView(
 
     private fun addNewWebFrame(url: String?, msg: Message?) {
         val newWebFrame = WebFrame.inflate(context)
-        newWebFrame.initialize(WebFrameCallbackImpl())
+        newWebFrame.initialize(WebFrameCallbackImpl(), right_bottom_icon_container.height)
 
         webFrames.add(newWebFrame)
-        newWebFrame.setFrameOrder(webFrames.indexOf(newWebFrame), webFrames.size)
-
         web_frame_container.addView(newWebFrame)
 
         if (url != null) {
@@ -162,16 +164,22 @@ class WebViewWindowRootView(
         // Add new frame as top.
         topWebFrame = newWebFrame
 
-        updateOrderZ()
+        updateGripState()
     }
 
-    private fun updateOrderZ() {
-        // Set ALL frame to low Z-order.
+    private fun updateGripState() {
+        val topIndex = webFrames.indexOf(topWebFrame)
+
         webFrames.forEach { webFrame ->
-            webFrame.elevation = -1.0f
+            // Grip position and selected or not.
+            val index = webFrames.indexOf(webFrame)
+            val isTop = topIndex == index
+            webFrame.setFrameOrder(index, webFrames.size, isTop)
+
+            // Z-Order. Top frame elevation = 0, and other frames is -0.1 x index diff from top.
+            val diff = abs(topIndex - webFrames.indexOf(webFrame))
+            webFrame.elevation = -0.1f * diff
         }
-        // Set top WebFrame elevation.
-        topWebFrame.elevation = 0.0f
     }
 
     private fun removeWebFrame(webFrame: WebFrame) {
@@ -337,7 +345,7 @@ class WebViewWindowRootView(
 
             topWebFrame = webFrames[frameOrder]
 
-            updateOrderZ()
+            updateGripState()
         }
 
         override fun onSlideWindowStarted(startedRawPos: Point) {
@@ -352,7 +360,7 @@ class WebViewWindowRootView(
 
             // Disable resizer.
             resizer_grip.visibility = INVISIBLE
-
+            add_new_web_frame_button.visibility = INVISIBLE
         }
 
         override fun onSlideWindowOnGoing(startedRawPos: Point, diffPos: Point) {
@@ -497,6 +505,15 @@ class WebViewWindowRootView(
         }
     }
 
+    private inner class AddNewWebFrameButtonOnClickListenerImpl : OnClickListener {
+        private val TAG = "AddNewWebFrameButtonOnClickListenerImpl"
+
+        override fun onClick(v: View) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onClick()")
+            addNewWebFrameWithDefaultUrl()
+        }
+    }
+
     private inner class WindowStateConvergentTask(
             private val targetWindowLayout: LayoutRect) : Runnable {
         private val TAG = "WindowPositionCorrectionTask"
@@ -554,6 +571,7 @@ class WebViewWindowRootView(
 
                         // Enable resizer.
                         resizer_grip.visibility = VISIBLE
+                        add_new_web_frame_button.visibility = VISIBLE
 
                         return
                     } else {
@@ -640,7 +658,7 @@ class WebViewWindowRootView(
                                 val nextTopOrder = max(0, curTopOrder - 1)
                                 topWebFrame = webFrames[nextTopOrder]
 
-                                updateOrderZ()
+                                updateGripState()
 
                             } else {
                                 // NOP. This is last one frame. Do NOT remove this.
