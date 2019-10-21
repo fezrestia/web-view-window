@@ -34,6 +34,8 @@ class WebViewWindowRootView(
     // Grip size.
     private val SLIDER_GRIP_WIDTH_PIX = resources.getDimensionPixelSize(R.dimen.grip_width)
     private val SLIDER_GRIP_HEIGHT_PIX = resources.getDimensionPixelSize(R.dimen.grip_height)
+    // Icon size.
+    private val RIGHT_BOTTOM_ICON_SIZE_PIX = resources.getDimensionPixelSize(R.dimen.right_bottom_icon_size)
 
     // Display size.
     private lateinit var displaySize: LayoutRect
@@ -251,7 +253,7 @@ class WebViewWindowRootView(
         closedWindowLayout.x = -1 * (windowLayoutParams.width - SLIDER_GRIP_WIDTH_PIX)
         closedWindowLayout.y = windowLayoutParams.y
         closedWindowLayout.width = windowLayoutParams.width
-        closedWindowLayout.height = SLIDER_GRIP_HEIGHT_PIX
+        closedWindowLayout.height = SLIDER_GRIP_HEIGHT_PIX + (SLIDER_GRIP_HEIGHT_PIX / 2) + (RIGHT_BOTTOM_ICON_SIZE_PIX * 2)
     }
 
     private fun updateLayoutParams() {
@@ -550,7 +552,7 @@ class WebViewWindowRootView(
                 return
             }
 
-            // Check next.
+            // Check open/close animation is done or not.
             if (lastDeltaX == dX && lastDeltaY == dY) {
                 // Correction is already convergent.
                 if (Log.IS_DEBUG) Log.logDebug(TAG, "Already position fixed.")
@@ -559,69 +561,80 @@ class WebViewWindowRootView(
                 windowLayoutParams.x = targetWindowLayout.x
                 windowLayoutParams.y = targetWindowLayout.y
 
-                // On opened.
-                if (targetWindowLayout == openedWindowLayout) {
-                    if (Log.IS_DEBUG) Log.logDebug(TAG, "on Opened.")
+                // Expand/Collapse animation.
+                val layoutParams = web_frame_container.layoutParams
+                // Check window is fully expanded/collapsed or not.
+                if (layoutParams.height == targetWindowLayout.height) {
+                    // OK, Animation is already converged.
 
-                    val layoutParams = web_frame_container.layoutParams
+                    when (layoutParams.height) {
+                        openedWindowLayout.height -> {
+                            // OK, Expanding is done.
+                            if (Log.IS_DEBUG) Log.logDebug(TAG, "Expanding DONE.")
 
-                    // Check window is fully expanded or not.
-                    if (layoutParams.height == openedWindowLayout.height) {
-                        // OK, Expansion is done.
-                        if (Log.IS_DEBUG) Log.logDebug(TAG, "Expansion DONE.")
+                            // Enable right-bottom icons.
+                            resizer_grip.visibility = VISIBLE
+                            add_new_web_frame_button.visibility = VISIBLE
+                        }
 
-                        // Enable resizer.
-                        resizer_grip.visibility = VISIBLE
-                        add_new_web_frame_button.visibility = VISIBLE
+                        closedWindowLayout.height -> {
+                            // OK, Collapsing is done.
+                            if (Log.IS_DEBUG) Log.logDebug(TAG, "Collapsing DONE.")
 
-                        return
-                    } else {
-                        // NG. Update window and layout height to expand.
-                        if (Log.IS_DEBUG) Log.logDebug(TAG, "Expansion in progress.")
+                            // For collapse animation, fix window size at last,
+                            if (Log.IS_DEBUG) Log.logDebug(TAG, "Collapse window size at last.")
 
-                        if (windowLayoutParams.height != openedWindowLayout.height) {
-                            // At first of window expansion, fix window size in advance,
-                            // after then, expand inner layout size with animation.
-                            if (Log.IS_DEBUG) Log.logDebug(TAG, "Expand window size in advance.")
-
+                            // Animation final height.
                             layoutParams.height = closedWindowLayout.height
                             web_frame_container.layoutParams = layoutParams
 
-                            windowLayoutParams.height = openedWindowLayout.height
+                            // Fix window size.
+                            windowLayoutParams.height = closedWindowLayout.height
                             windowManager.updateViewLayout(
                                     this@WebViewWindowRootView,
                                     windowLayoutParams)
+
+                            // Disable right-bottom icons.
+                            resizer_grip.visibility = INVISIBLE
+                            add_new_web_frame_button.visibility = INVISIBLE
                         }
 
-                        val diff = openedWindowLayout.height - layoutParams.height
+                        else -> throw RuntimeException("Unexpectd target = $targetWindowLayout")
+                    }
+                } else {
+                    // NG. Update window and layout height to expand/collapse.
+                    if (Log.IS_DEBUG) Log.logDebug(TAG, "Expansion in progress.")
 
-                        if (diff == lastDeltaH) {
-                            // Consider layout is already fully expanded.
-                            layoutParams.height = openedWindowLayout.height
-                        } else {
-                            // Expansion in progress.
-                            layoutParams.height += (diff * P_GAIN).toInt()
-                        }
+                    // For expanding animation, fix window size in advance,
+                    // after then, expand inner layout size with animation.
+                    if (layoutParams.height == closedWindowLayout.height) {
+                        if (Log.IS_DEBUG) Log.logDebug(TAG, "Expand window size in advance.")
+
+                        // Animation initial height.
+                        layoutParams.height = closedWindowLayout.height
                         web_frame_container.layoutParams = layoutParams
 
-                        lastDeltaH = diff
-
-                        if (Log.IS_DEBUG) Log.logDebug(TAG, "LayoutH = ${layoutParams.height}")
+                        // Fix window size.
+                        windowLayoutParams.height = openedWindowLayout.height
+                        windowManager.updateViewLayout(
+                                this@WebViewWindowRootView,
+                                windowLayoutParams)
                     }
-                }
 
-                // On closed.
-                if (targetWindowLayout == closedWindowLayout) {
-                    if (Log.IS_DEBUG) Log.logDebug(TAG, "on Closed.")
+                    val diff = targetWindowLayout.height - layoutParams.height
 
-                    windowLayoutParams.height = closedWindowLayout.height
-                    windowManager.updateViewLayout(
-                            this@WebViewWindowRootView,
-                            windowLayoutParams)
+                    if (diff == lastDeltaH) {
+                        // Consider layout is already fully expanded/collapsed.
+                        layoutParams.height = targetWindowLayout.height
+                    } else {
+                        // Expansion in progress.
+                        layoutParams.height += (diff * P_GAIN).toInt()
+                    }
+                    web_frame_container.layoutParams = layoutParams
 
-                    web_frame_container.layoutParams.height = closedWindowLayout.height
+                    lastDeltaH = diff
 
-                    return
+                    if (Log.IS_DEBUG) Log.logDebug(TAG, "LayoutH = ${layoutParams.height}")
                 }
             }
 
@@ -633,7 +646,6 @@ class WebViewWindowRootView(
 
             if (Log.IS_DEBUG) Log.logDebug(TAG, "run() : X")
         }
-
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
