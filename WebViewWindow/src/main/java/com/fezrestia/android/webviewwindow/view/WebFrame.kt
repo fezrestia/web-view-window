@@ -200,26 +200,26 @@ class WebFrame(
         val curRect = Rect()
         getLocalVisibleRect(curRect)
 
-        if (Log.IS_DEBUG) {
-            Log.logDebug(TAG, "## WebFrame WxH = ${curRect.width()} x ${curRect.height()}")
-        }
+//        if (Log.IS_DEBUG) {
+//            Log.logDebug(TAG, "## WebFrame WxH = ${curRect.width()} x ${curRect.height()}")
+//        }
 
         val topMargin: Int
         if (totalFrameCount == 1) {
             // Only 1 frame.
             topMargin = 0
 
-            if (Log.IS_DEBUG) Log.logDebug(TAG, "## Top frame")
+//            if (Log.IS_DEBUG) Log.logDebug(TAG, "## Top frame")
         } else {
             val tabRange = curRect.height() - SLIDER_GRIP_HEIGHT_PIX - rightBottomIconsContainerHeight
             val tabStep = min(tabRange / (totalFrameCount - 1), SLIDER_GRIP_HEIGHT_PIX)
             topMargin = tabStep * frameOrder
 
-            if (Log.IS_DEBUG) {
-                Log.logDebug(TAG, "## tabRange = $tabRange")
-                Log.logDebug(TAG, "## tabStep = $tabStep")
-                Log.logDebug(TAG, "## topMargin = $topMargin")
-            }
+//            if (Log.IS_DEBUG) {
+//                Log.logDebug(TAG, "## tabRange = $tabRange")
+//                Log.logDebug(TAG, "## tabStep = $tabStep")
+//                Log.logDebug(TAG, "## topMargin = $topMargin")
+//            }
         }
 
         // Grip position.

@@ -575,6 +575,8 @@ class WebViewWindowRootView(
                             // Enable right-bottom icons.
                             resizer_grip.visibility = VISIBLE
                             add_new_web_frame_button.visibility = VISIBLE
+
+                            return // Exit task.
                         }
 
                         closedWindowLayout.height -> {
@@ -597,6 +599,8 @@ class WebViewWindowRootView(
                             // Disable right-bottom icons.
                             resizer_grip.visibility = INVISIBLE
                             add_new_web_frame_button.visibility = INVISIBLE
+
+                            return // Exit task.
                         }
 
                         else -> throw RuntimeException("Unexpectd target = $targetWindowLayout")
