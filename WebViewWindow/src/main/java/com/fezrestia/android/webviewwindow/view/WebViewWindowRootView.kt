@@ -624,7 +624,7 @@ class WebViewWindowRootView(
                             return // Exit task.
                         }
 
-                        else -> throw RuntimeException("Unexpectd target = $targetWindowLayout")
+                        else -> throw RuntimeException("Unexpected target = $targetWindowLayout")
                     }
                 } else {
                     // NG. Update window and layout height to expand/collapse.
