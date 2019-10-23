@@ -185,6 +185,15 @@ class WebViewWindowRootView(
         }
     }
 
+    private fun closeWebFrame(webFrame: WebFrame) {
+        val order = webFrames.indexOf(webFrame)
+        removeWebFrame(webFrame)
+        val nextTopOrder = max(0, order - 1)
+        topWebFrame = webFrames[nextTopOrder]
+
+        updateGripState()
+    }
+
     private fun removeWebFrame(webFrame: WebFrame) {
         web_frame_container.removeView(webFrame)
         webFrames.remove(webFrame)
@@ -417,6 +426,18 @@ class WebViewWindowRootView(
             if (Log.IS_DEBUG) Log.logDebug(TAG, "onOpenNewWindowRequested()")
 
             addNewWebFrameWithTransportMsg(msg)
+        }
+
+        override fun onCloseRequired(frameOrder: Int) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onCloseRequired() : frameOrder = $frameOrder")
+
+            if (webFrames.size == 1) {
+                // This frame is LAST one. Do not close it.
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "## This WebFrame is LAST one. Do not close.")
+                return
+            }
+
+            closeWebFrame(webFrames[frameOrder])
         }
     }
 
@@ -670,12 +691,7 @@ class WebViewWindowRootView(
                                 // This frame is NOT last one.
                                 if (Log.IS_DEBUG) Log.logDebug(TAG, "## Remove current WebFrame")
 
-                                val curTopOrder = webFrames.indexOf(topWebFrame)
-                                removeWebFrame(topWebFrame)
-                                val nextTopOrder = max(0, curTopOrder - 1)
-                                topWebFrame = webFrames[nextTopOrder]
-
-                                updateGripState()
+                                closeWebFrame(topWebFrame)
 
                             } else {
                                 // NOP. This is last one frame. Do NOT remove this.

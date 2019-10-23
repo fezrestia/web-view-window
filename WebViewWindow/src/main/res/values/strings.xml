@@ -7,4 +7,7 @@
     <string name="enable_disable">Enable/Disable</string>
     <string name="base_load_url">Base Load URL</string>
 
+    <string name="popup_menu_title_reload">Reload</string>
+    <string name="popup_menu_title_close">Close</string>
+
 </resources>

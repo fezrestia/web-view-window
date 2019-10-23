@@ -12,6 +12,7 @@ import android.view.*
 import android.webkit.WebView
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.R
 import kotlinx.android.synthetic.main.web_frame.view.*
@@ -46,6 +47,8 @@ class WebFrame(
         fun onSlideWindowStopped(startedRawPos: Point, diffPos: Point, stoppedRawPos: Point)
 
         fun onOpenNewWindowRequested(msg: Message)
+
+        fun onCloseRequired(frameOrder: Int)
     }
 
     private inner class ExtendedWebViewCallbackImpl : ExtendedWebView.Callback {
@@ -69,7 +72,8 @@ class WebFrame(
         web_view.onResume()
 
         // Slider grip.
-        slider_grip.setOnTouchListener(SliderGripTouchEventListenerImpl())
+        slider_grip.setOnTouchListener(SliderGripOnTouchListenerImpl())
+        slider_grip.setOnLongClickListener(SliderGripOnLongClickListenerImpl())
 
         // Per-layout process.
         viewTreeObserver.addOnGlobalLayoutListener(LayoutObserverImpl())
@@ -101,10 +105,13 @@ class WebFrame(
     fun release() {
         callback = null
         slider_grip.setOnTouchListener(null)
+        slider_grip.setOnLongClickListener(null)
         web_view.release()
     }
 
-    private inner class SliderGripTouchEventListenerImpl : OnTouchListener {
+    private inner class SliderGripOnTouchListenerImpl : OnTouchListener {
+        private val TAG = "SliderGripOnTouchListenerImpl"
+
         private var onDownRawX = 0
         private var onDownRawY = 0
         private var isDragging = false
@@ -117,17 +124,21 @@ class WebFrame(
             return curY - onDownRawY
         }
 
-        override fun onTouch(v: View, event: MotionEvent): Boolean {
+        override fun onTouch(view: View, event: MotionEvent): Boolean {
             val curX = event.rawX.toInt()
             val curY = event.rawY.toInt()
 
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    if (Log.IS_DEBUG) Log.logDebug(TAG, "## ACTION_DOWN")
+
                     onDownRawX = curX
                     onDownRawY = curY
                 }
 
                 MotionEvent.ACTION_MOVE -> {
+                    if (Log.IS_DEBUG) Log.logDebug(TAG, "## ACTION_MOVE")
+
                     // Detect finger starts moving or not.
                     if (isDragging) {
                         // Drag on going.
@@ -151,6 +162,8 @@ class WebFrame(
                 }
 
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    if (Log.IS_DEBUG) Log.logDebug(TAG, "## ACTION_UP/CANCEL")
+
                     if (isDragging) {
                         // Drag end.
                         callback?.onSlideWindowStopped(
@@ -172,7 +185,61 @@ class WebFrame(
                 }
             }
 
+            return false // to detect long-click.
+        }
+    }
+
+    private inner class SliderGripOnLongClickListenerImpl : OnLongClickListener {
+        private val TAG = "SliderGripOnLongClickListenerImpl"
+
+        @SuppressLint("RtlHardcoded")
+        override fun onLongClick(v: View?): Boolean {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "## LONG-CLICK")
+
+            if (!isTopFrame) {
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "## NOP. isTopFrame == false")
+                return false
+            }
+
+            val popup = PopupMenu(context, slider_grip)
+            popup.menuInflater.inflate(R.menu.slider_grip_long_click_popup, popup.menu)
+            popup.gravity = Gravity.RIGHT
+            popup.setOnMenuItemClickListener(OnMenuItemClickListenerImpl())
+            popup.setOnDismissListener(OnDismissListenerImpl())
+            popup.show()
+
             return true
+        }
+
+        private inner class OnMenuItemClickListenerImpl : PopupMenu.OnMenuItemClickListener {
+            private val TAG = "OnMenuItemClickListenerImpl"
+
+            override fun onMenuItemClick(item: MenuItem): Boolean {
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "onMenuItemClick()")
+
+                when (item.itemId) {
+                    R.id.popup_menu_reload -> {
+                        if (Log.IS_DEBUG) Log.logDebug(TAG, "## Popup : Reload")
+                        web_view.reload()
+                    }
+                    R.id.popup_menu_close -> {
+                        if (Log.IS_DEBUG) Log.logDebug(TAG, "## Popup : Close")
+                        callback?.onCloseRequired(frameOrder)
+                    }
+                }
+
+                return true
+            }
+        }
+
+        private inner class OnDismissListenerImpl : PopupMenu.OnDismissListener {
+            private val TAG = "OnDismissListenerImpl"
+
+            override fun onDismiss(menu: PopupMenu) {
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "onDismiss()")
+                menu.setOnMenuItemClickListener(null)
+                menu.setOnDismissListener(null)
+            }
         }
     }
 

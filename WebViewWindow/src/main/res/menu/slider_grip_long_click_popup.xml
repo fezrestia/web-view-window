@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+>
+    <item
+        android:id="@+id/popup_menu_reload"
+        android:title="@string/popup_menu_title_reload"
+    />
+    <item
+        android:id="@+id/popup_menu_close"
+        android:title="@string/popup_menu_title_close"
+    />
+</menu>
