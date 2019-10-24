@@ -68,8 +68,11 @@ class WebViewWindowService : Service() {
         view = WebViewWindowRootView.inflate(this)
         view.initialize()
 
-        controller = WebViewWindowController()
-        controller.start(view)
+        controller = WebViewWindowController(this)
+        controller.start()
+
+        view.controller = controller
+        controller.view = view
 
         App.isEnabled = true
 
@@ -81,6 +84,9 @@ class WebViewWindowService : Service() {
         super.onDestroy()
 
         if (!App.isEnabled) throw RuntimeException("Already Disabled.")
+
+        view.controller = null
+        controller.view = null
 
         view.release()
 
@@ -114,6 +120,10 @@ class WebViewWindowService : Service() {
 
                 Constants.INTENT_ACTION_TOGGLE_OVERLAY_VISIBILITY -> {
                     view.toggleShowHide()
+                }
+
+                Constants.INTENT_ACTION_OPEN_OVERLAY_WINDOW -> {
+                    view.startSlideInWindow()
                 }
 
                 else -> throw RuntimeException("Unexpected ACTION = ${intent.action}")

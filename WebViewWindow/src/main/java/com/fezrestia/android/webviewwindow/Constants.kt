@@ -7,6 +7,8 @@ object Constants {
     const val INTENT_ACTION_STOP_OVERLAY_WINDOW = "com.fezrestia.android.webviewwindow.intent.ACTION_STOP_OVERLAY_WINDOW"
     /** Intent action for overlay visibility switch. */
     const val INTENT_ACTION_TOGGLE_OVERLAY_VISIBILITY = "com.fezrestia.android.webviewwindow.intent.ACTION_TOGGLE_OVERLAY_VISIBILITY"
+    /** Intent action to open overlay window. */
+    const val INTENT_ACTION_OPEN_OVERLAY_WINDOW = "com.fezrestia.android.webviewwindow.intent.ACTION_OPEN_OVERLAY_WINDOW"
 
     /** SP Key, overlay en/disable.  */
     const val SP_KEY_WWW_ENABLE_DISABLE = "sp-key-www-enable-disable"

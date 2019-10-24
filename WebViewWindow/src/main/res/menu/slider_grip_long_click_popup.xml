@@ -10,4 +10,8 @@
         android:id="@+id/popup_menu_close"
         android:title="@string/popup_menu_title_close"
     />
+    <item
+        android:id="@+id/popup_menu_open_on_chrome_custom_tab"
+        android:title="@string/popup_menu_title_open_on_chrome_custom_tab"
+    />
 </menu>

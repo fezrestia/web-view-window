@@ -2,18 +2,22 @@
 
 package com.fezrestia.android.webviewwindow.control
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import com.fezrestia.android.util.Log
+import com.fezrestia.android.webviewwindow.activity.ChromeCustomTabBaseActivity
 import com.fezrestia.android.webviewwindow.view.WebViewWindowRootView
 
 /**
  * Controller class.
  *
  * @constructor
- *
+ * @param context
  */
-class WebViewWindowController {
+class WebViewWindowController(private val context: Context) {
 
-    private lateinit var view: WebViewWindowRootView
+    var view: WebViewWindowRootView? = null
 
     /**
      * Release ALL references.
@@ -24,15 +28,11 @@ class WebViewWindowController {
 
     /**
      * Start.
-     *
-     * @view
      */
-    fun start(view: WebViewWindowRootView) {
+    fun start() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "start() : E")
 
         loadPreferences()
-
-        this.view = view
 
         if (Log.IS_DEBUG) Log.logDebug(TAG, "start() : X")
     }
@@ -54,5 +54,22 @@ class WebViewWindowController {
 
     companion object {
         private const val TAG = "WebViewWindowController"
+    }
+
+    /**
+     * Start Chrome Custom Tab.
+     *
+     * @url Target URL.
+     */
+    fun startChromeCustomTab(url: String) {
+        val baseAct = Intent(
+                Intent.ACTION_MAIN,
+                Uri.parse(url),
+                context,
+                ChromeCustomTabBaseActivity::class.java)
+        baseAct.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        baseAct.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        baseAct.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
+        context.startActivity(baseAct)
     }
 }

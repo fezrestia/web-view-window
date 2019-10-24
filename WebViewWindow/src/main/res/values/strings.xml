@@ -9,5 +9,6 @@
 
     <string name="popup_menu_title_reload">Reload</string>
     <string name="popup_menu_title_close">Close</string>
+    <string name="popup_menu_title_open_on_chrome_custom_tab">Open on Chrome Custom Tab</string>
 
 </resources>

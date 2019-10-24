@@ -22,6 +22,7 @@ import com.fezrestia.android.webviewwindow.App
 import com.fezrestia.android.util.LayoutRect
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.R
+import com.fezrestia.android.webviewwindow.control.WebViewWindowController
 import kotlinx.android.synthetic.main.overlay_root_view.view.*
 import kotlin.math.abs
 import kotlin.math.max
@@ -30,6 +31,8 @@ class WebViewWindowRootView(
         context: Context,
         attrs: AttributeSet?,
         defStyle: Int) : FrameLayout(context, attrs, defStyle) {
+
+    var controller: WebViewWindowController? = null
 
     // Grip size.
     private val SLIDER_GRIP_WIDTH_PIX = resources.getDimensionPixelSize(R.dimen.grip_width)
@@ -339,6 +342,30 @@ class WebViewWindowRootView(
         windowManager.updateViewLayout(this, windowLayoutParams)
     }
 
+    fun startSlideInWindow() {
+        // Remove old task
+        windowStateConvergentTask?.let {
+            App.ui.removeCallbacks(it)
+        }
+        // Auto open overlay window.
+        WindowStateConvergentTask(openedWindowLayout).let {
+            App.ui.post(it)
+            windowStateConvergentTask = it
+        }
+    }
+
+    fun startSlideOutWindow() {
+        // Remove old task
+        windowStateConvergentTask?.let {
+            App.ui.removeCallbacks(it)
+        }
+        // Auto close overlay window.
+        WindowStateConvergentTask(closedWindowLayout).let {
+            App.ui.post(it)
+            windowStateConvergentTask = it
+        }
+    }
+
     public override fun onConfigurationChanged(newConfig: Configuration) {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onConfigurationChanged() : Config=$newConfig")
         super.onConfigurationChanged(newConfig)
@@ -392,23 +419,19 @@ class WebViewWindowRootView(
 
             val targetLayout: LayoutRect
 
-            if (0 < diffPos.x) { // Open direction.
+            targetLayout = if (0 < diffPos.x) { // Open direction.
                 val openThreshold = displaySize.width / 3
                 if (openThreshold < stoppedRawPos.x) { // Do open.
-                    targetLayout = openedWindowLayout
-                    windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
+                    openedWindowLayout
                 } else { // Stay closed.
-                    targetLayout = closedWindowLayout
-                    windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
+                    closedWindowLayout
                 }
             } else { // Close direction.
                 val closeThreshold = displaySize.width * 2 / 3
                 if (stoppedRawPos.x < closeThreshold) { // Do close.
-                    targetLayout = closedWindowLayout
-                    windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
+                    closedWindowLayout
                 } else { // Stay opened.
-                    targetLayout = openedWindowLayout
-                    windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
+                    openedWindowLayout
                 }
             }
 
@@ -438,6 +461,14 @@ class WebViewWindowRootView(
             }
 
             closeWebFrame(webFrames[frameOrder])
+        }
+
+        override fun onStartChromeCustomTabRequired(url: String) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onStartChromeCustomTabRequired() : url=$url")
+
+            controller?.startChromeCustomTab(url)
+
+            startSlideOutWindow()
         }
     }
 
@@ -552,6 +583,18 @@ class WebViewWindowRootView(
         private var lastDeltaX = 0
         private var lastDeltaY = 0
         private var lastDeltaH = 0
+
+        init {
+            when (targetWindowLayout.height) {
+                openedWindowLayout.height -> {
+                    windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
+                }
+                closedWindowLayout.height -> {
+                    windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
+                }
+                else -> throw RuntimeException("Unexpected target = $targetWindowLayout")
+            }
+        }
 
         override fun run() {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "run() : E")

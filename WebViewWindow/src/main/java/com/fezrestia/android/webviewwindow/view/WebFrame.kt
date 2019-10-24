@@ -49,6 +49,7 @@ class WebFrame(
         fun onOpenNewWindowRequested(msg: Message)
 
         fun onCloseRequired(frameOrder: Int)
+        fun onStartChromeCustomTabRequired(url: String)
     }
 
     private inner class ExtendedWebViewCallbackImpl : ExtendedWebView.Callback {
@@ -225,6 +226,10 @@ class WebFrame(
                     R.id.popup_menu_close -> {
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "## Popup : Close")
                         callback?.onCloseRequired(frameOrder)
+                    }
+                    R.id.popup_menu_open_on_chrome_custom_tab -> {
+                        if (Log.IS_DEBUG) Log.logDebug(TAG, "## Popup : Open on Chrome Custom Tab")
+                        callback?.onStartChromeCustomTabRequired(web_view.url)
                     }
                 }
 
