@@ -105,11 +105,6 @@ class WebViewWindowRootView(
      * Release all resources.
      */
     fun release() {
-        val frames = webFrames.toTypedArray()
-        frames.forEach { frame ->
-            removeWebFrame(frame)
-        }
-
         resizer_grip.setOnTouchListener(null)
         add_new_web_frame_button.setOnClickListener(null)
     }
@@ -130,6 +125,11 @@ class WebViewWindowRootView(
      */
     fun removeFromOverlayWindow() {
         windowManager.removeView(this)
+
+        val frames = webFrames.toTypedArray()
+        frames.forEach { frame ->
+            removeWebFrame(frame)
+        }
     }
 
     /**

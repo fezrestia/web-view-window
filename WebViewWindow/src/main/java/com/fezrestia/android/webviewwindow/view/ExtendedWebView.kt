@@ -160,18 +160,21 @@ class ExtendedWebView(
         callback = null
 
         stopLoading()
-        clearCache(true)
-        destroy()
+        onPause()
 
-        removeJavascriptInterface(INJECTED_JAVA_SCRIPT_NATIVE_INTERFACE_OBJECT_NAME)
+        clearCache(true)
+        clearHistory()
 
         setWebViewClient(null)
         setWebChromeClient(null)
+        removeJavascriptInterface(INJECTED_JAVA_SCRIPT_NATIVE_INTERFACE_OBJECT_NAME)
 
         App.ui.removeCallbacks(nopTask)
         App.ui.removeCallbacks(reloadTask)
 
         backHandlerThread.quitSafely()
+
+        destroy() // Final API calling for WebView.
     }
 
     private fun loadJs(assetsName: String): String {
