@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.fezrestia.android.webviewwindow"
 
-    android:versionCode="229"
-    android:versionName="1.4.1-229"
+    android:versionCode="230"
+    android:versionName="1.4.2-230"
 >
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -62,6 +62,11 @@
         <service
             android:name="com.fezrestia.android.webviewwindow.service.WebViewWindowService"
             android:exported="false"
+        />
+
+        <meta-data
+            android:name="android.webkit.WebView.MetricsOptOut"
+            android:value="true"
         />
 
     </application>
