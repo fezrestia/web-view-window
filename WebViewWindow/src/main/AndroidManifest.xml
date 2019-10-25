@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.fezrestia.android.webviewwindow"
 
-    android:versionCode="245"
-    android:versionName="1.4.5-245"
+    android:versionCode="249"
+    android:versionName="1.4.6-249"
 >
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -14,6 +14,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:name="com.fezrestia.android.webviewwindow.App"

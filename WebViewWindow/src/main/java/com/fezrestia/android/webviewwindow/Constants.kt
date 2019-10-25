@@ -17,4 +17,7 @@ object Constants {
 
     /** Default load URL.  */
     const val DEFAULT_BASE_LOAD_URL = "https://www.google.com"
+
+    /** WakeLock name. */
+    const val WAKE_LOCK_NAME = "WebViewWindow:WakeLock"
 }
