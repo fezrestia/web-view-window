@@ -83,6 +83,10 @@ class ExtendedWebView(
         backHandlerThread.start()
         backHandler = Handler(backHandlerThread.looper)
 
+        // Set rendering process priority to be targeted by LMK if not visible.
+        // TODO: Enable this with onRenderProcessGone() implementation.
+//        setRendererPriorityPolicy(RENDERER_PRIORITY_BOUND, true)
+
         // Web callback.
         setWebViewClient(webViewClient)
         setWebChromeClient(webChromeClient)
@@ -282,6 +286,24 @@ class ExtendedWebView(
 
             //TODO: Handle SSL Error.
 
+        }
+
+        override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onRenderProcessGone()")
+
+            if (!detail.didCrash()) {
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "## WebView Rendering Process is killed by LMK.")
+
+                // TODO: Handle WebView close.
+
+            } else {
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "## WebView Rendering Process is crashed.")
+
+                // TODO: Handle crash.
+
+            }
+
+            return true // Continue to run App.
         }
     }
 
