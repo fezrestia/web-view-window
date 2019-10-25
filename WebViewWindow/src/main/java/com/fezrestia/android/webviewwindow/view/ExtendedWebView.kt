@@ -75,6 +75,10 @@ class ExtendedWebView(
     fun initialize(callback: Callback) {
         this.callback = callback
 
+        if (Log.IS_DEBUG) {
+            Log.logDebug(TAG, "## WebView version = ${getCurrentWebViewPackage()}")
+        }
+
         backHandlerThread = HandlerThread("back-worker", Thread.NORM_PRIORITY)
         backHandlerThread.start()
         backHandler = Handler(backHandlerThread.looper)
