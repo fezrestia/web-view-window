@@ -29,6 +29,9 @@ class WebFrame(
     private val TOUCH_SLOP: Int = ViewConfiguration.get(context).scaledTouchSlop
     private val SLIDER_GRIP_HEIGHT_PIX = resources.getDimensionPixelSize(R.dimen.grip_height)
 
+    private val DRAWABLE_SLIDER_GRIP_SELECTED = resources.getDrawable(R.drawable.slider_grip_selected, null)
+    private val DRAWABLE_SLIDER_GRIP = resources.getDrawable(R.drawable.slider_grip, null)
+
     private var callback: Callback? = null
     private var rightBottomIconsContainerHeight: Int = 0
 
@@ -301,9 +304,9 @@ class WebFrame(
 
         // Grip icon.
         if (isTopFrame) {
-            slider_grip.setImageResource(R.drawable.slider_grip_selected)
+            slider_grip.setImageDrawable(DRAWABLE_SLIDER_GRIP_SELECTED)
         } else {
-            slider_grip.setImageResource(R.drawable.slider_grip)
+            slider_grip.setImageDrawable(DRAWABLE_SLIDER_GRIP)
         }
     }
 
