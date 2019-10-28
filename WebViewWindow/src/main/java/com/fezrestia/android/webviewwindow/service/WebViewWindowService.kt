@@ -1,4 +1,4 @@
-@file:Suppress("ConstantConditionIf")
+@file:Suppress("ConstantConditionIf", "PrivatePropertyName")
 
 package com.fezrestia.android.webviewwindow.service
 
@@ -77,13 +77,10 @@ class WebViewWindowService : Service() {
                 getForegroundServiceNotification())
 
         view = WebViewWindowRootView.inflate(this)
-        view.initialize()
+        view.initialize(ViewCallback())
 
         controller = WebViewWindowController(this)
         controller.start()
-
-        view.controller = controller
-        controller.view = view
 
         setupWakeLock()
 
@@ -97,9 +94,6 @@ class WebViewWindowService : Service() {
         super.onDestroy()
 
         if (!App.isEnabled) throw RuntimeException("Already Disabled.")
-
-        view.controller = null
-        controller.view = null
 
         view.release()
 
@@ -115,6 +109,20 @@ class WebViewWindowService : Service() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onDestroy() : X")
     }
 
+    private inner class ViewCallback : WebViewWindowRootView.Callback {
+        private val TAG = "ViewCallback"
+
+        override fun onNewWebFrameRequired() {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onNewWebFrameRequired()")
+            view.addNewWebFrameWithUrl(controller.getDefaultUrl())
+        }
+
+        override fun onFullBrowserRequired(url: String) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onFullBrowserRequired() : url=$url")
+            controller.startChromeCustomTab(url)
+        }
+    }
+
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onStartCommand() : E")
 
@@ -125,7 +133,17 @@ class WebViewWindowService : Service() {
             when (intent.action) {
                 Constants.INTENT_ACTION_START_OVERLAY_WINDOW -> {
                     view.addToOverlayWindow()
-                    view.addNewWebFrameWithDefaultUrl()
+
+                    val urls = controller.loadUrls()
+                    if (urls.isEmpty()) {
+                        // Open 1 default WebFrame.
+                        view.addNewWebFrameWithUrl(controller.getDefaultUrl())
+                    } else {
+                        // Restore last URLs.
+                        urls.forEach { url ->
+                            view.addNewWebFrameWithUrl(url)
+                        }
+                    }
 
                     // Acquire WakeLock immediately.
                     UpdateWakeLockTask().let { task ->
@@ -135,6 +153,9 @@ class WebViewWindowService : Service() {
                 }
 
                 Constants.INTENT_ACTION_STOP_OVERLAY_WINDOW -> {
+                    val urls = view.getCurrentUrls()
+                    controller.saveUrls(urls)
+
                     view.removeFromOverlayWindow()
                     stopSelf()
 

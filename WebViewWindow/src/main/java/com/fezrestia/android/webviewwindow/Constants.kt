@@ -14,6 +14,8 @@ object Constants {
     const val SP_KEY_WWW_ENABLE_DISABLE = "sp-key-www-enable-disable"
     /** SP Key, base load URL.  */
     const val SP_KEY_BASE_LOAD_URL = "sp-key-base-load-url"
+    /** SP Key, URLs on overlay window closed. */
+    const val SP_KEY_LAST_URLS_JSON = "sp-key-last-urls-json"
 
     /** Default load URL.  */
     const val DEFAULT_BASE_LOAD_URL = "https://www.google.com"

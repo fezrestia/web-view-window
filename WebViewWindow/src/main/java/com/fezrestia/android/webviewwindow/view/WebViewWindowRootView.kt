@@ -17,12 +17,10 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
 
-import com.fezrestia.android.webviewwindow.Constants
 import com.fezrestia.android.webviewwindow.App
 import com.fezrestia.android.util.LayoutRect
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.R
-import com.fezrestia.android.webviewwindow.control.WebViewWindowController
 import kotlinx.android.synthetic.main.overlay_root_view.view.*
 import kotlin.math.abs
 import kotlin.math.max
@@ -31,8 +29,6 @@ class WebViewWindowRootView(
         context: Context,
         attrs: AttributeSet?,
         defStyle: Int) : FrameLayout(context, attrs, defStyle) {
-
-    var controller: WebViewWindowController? = null
 
     // Grip size.
     private val SLIDER_GRIP_WIDTH_PIX = resources.getDimensionPixelSize(R.dimen.grip_width)
@@ -69,6 +65,12 @@ class WebViewWindowRootView(
     // Current top WebFrame.
     private lateinit var topWebFrame: WebFrame
 
+    // UI event callback interface.
+    interface Callback {
+        fun onNewWebFrameRequired()
+        fun onFullBrowserRequired(url: String)
+    }
+    private var callback: Callback? = null
 
     // CONSTRUCTOR.
     constructor(context: Context) : this(context, null) {
@@ -82,9 +84,13 @@ class WebViewWindowRootView(
 
     /**
      * Initialize all of configurations.
+     *
+     * @param callback
      */
-    fun initialize() {
+    fun initialize(callback: Callback) {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "initialize() : E")
+
+        this.callback = callback
 
         resizer_grip.setOnTouchListener(ResizerGripTouchEventHandler())
 
@@ -105,6 +111,7 @@ class WebViewWindowRootView(
      * Release all resources.
      */
     fun release() {
+        callback = null
         resizer_grip.setOnTouchListener(null)
         add_new_web_frame_button.setOnClickListener(null)
     }
@@ -133,17 +140,10 @@ class WebViewWindowRootView(
     }
 
     /**
-     * Add new WebFrame to tail of stack with default URL.
+     * Add new WebFrame to tail of stack with URL.
      */
-    fun addNewWebFrameWithDefaultUrl() {
-        var baseUrl = App.sp.getString(
-                Constants.SP_KEY_BASE_LOAD_URL,
-                Constants.DEFAULT_BASE_LOAD_URL) as String
-        if (baseUrl.isEmpty()) {
-            baseUrl = Constants.DEFAULT_BASE_LOAD_URL
-        }
-
-        addNewWebFrame(baseUrl, null)
+    fun addNewWebFrameWithUrl(url: String) {
+        addNewWebFrame(url, null)
     }
 
     /**
@@ -366,6 +366,12 @@ class WebViewWindowRootView(
         }
     }
 
+    fun getCurrentUrls(): List<String> {
+        return webFrames.map { webFrame ->
+            webFrame.getCurrentUrl()
+        }
+    }
+
     public override fun onConfigurationChanged(newConfig: Configuration) {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onConfigurationChanged() : Config=$newConfig")
         super.onConfigurationChanged(newConfig)
@@ -466,7 +472,7 @@ class WebViewWindowRootView(
         override fun onStartChromeCustomTabRequired(url: String) {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "onStartChromeCustomTabRequired() : url=$url")
 
-            controller?.startChromeCustomTab(url)
+            callback?.onFullBrowserRequired(url)
 
             startSlideOutWindow()
         }
@@ -565,7 +571,7 @@ class WebViewWindowRootView(
 
         override fun onClick(v: View) {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "onClick()")
-            addNewWebFrameWithDefaultUrl()
+            callback?.onNewWebFrameRequired()
         }
     }
 

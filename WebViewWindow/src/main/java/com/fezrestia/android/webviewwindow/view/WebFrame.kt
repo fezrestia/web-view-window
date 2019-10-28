@@ -321,6 +321,7 @@ class WebFrame(
     fun onPause() { web_view.onPause() }
     fun canGoBack(): Boolean { return web_view.canGoBack() }
     fun goBack() { web_view.goBack() }
+    fun getCurrentUrl(): String { return web_view.url }
 
     fun showGrip() {
         slider_grip.visibility = FrameLayout.VISIBLE
