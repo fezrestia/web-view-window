@@ -10,7 +10,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
-import android.os.PowerManager
 
 import com.fezrestia.android.webviewwindow.Constants
 import com.fezrestia.android.webviewwindow.R
@@ -23,9 +22,6 @@ class WebViewWindowService : Service() {
 
     private lateinit var controller: WebViewWindowController
     private lateinit var view: WebViewWindowRootView
-
-    private lateinit var wakeLock: PowerManager.WakeLock
-    private var updateWakeLockTask: UpdateWakeLockTask? = null
 
     override fun onBind(intent: Intent): IBinder? {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onBind() : E")
@@ -59,13 +55,6 @@ class WebViewWindowService : Service() {
                 .build()
     }
 
-    private fun setupWakeLock() {
-        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-        wakeLock = pm.newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK,
-                Constants.WAKE_LOCK_NAME)
-    }
-
     override fun onCreate() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onCreate() : E")
         super.onCreate()
@@ -80,9 +69,6 @@ class WebViewWindowService : Service() {
         view.initialize(ViewCallback())
 
         controller = WebViewWindowController(this)
-        controller.start()
-
-        setupWakeLock()
 
         App.isEnabled = true
 
@@ -97,10 +83,7 @@ class WebViewWindowService : Service() {
 
         view.release()
 
-        controller.stop()
         controller.release()
-
-        wakeLock.release()
 
         stopForeground(true)
 
@@ -132,6 +115,8 @@ class WebViewWindowService : Service() {
             Log.logDebug(TAG, "ACTION = ${intent.action}")
             when (intent.action) {
                 Constants.INTENT_ACTION_START_OVERLAY_WINDOW -> {
+                    controller.start()
+
                     view.addToOverlayWindow()
 
                     val urls = controller.loadUrls()
@@ -144,12 +129,6 @@ class WebViewWindowService : Service() {
                             view.addNewWebFrameWithUrl(url)
                         }
                     }
-
-                    // Acquire WakeLock immediately.
-                    UpdateWakeLockTask().let { task ->
-                        App.ui.post(task)
-                        updateWakeLockTask = task
-                    }
                 }
 
                 Constants.INTENT_ACTION_STOP_OVERLAY_WINDOW -> {
@@ -157,13 +136,10 @@ class WebViewWindowService : Service() {
                     controller.saveUrls(urls)
 
                     view.removeFromOverlayWindow()
-                    stopSelf()
 
-                    // Remove update task.
-                    updateWakeLockTask?.let { task ->
-                        App.ui.removeCallbacks(task)
-                        updateWakeLockTask = null
-                    }
+                    controller.stop()
+
+                    stopSelf()
                 }
 
                 Constants.INTENT_ACTION_TOGGLE_OVERLAY_VISIBILITY -> {
@@ -182,21 +158,11 @@ class WebViewWindowService : Service() {
         return START_NOT_STICKY
     }
 
-    private inner class UpdateWakeLockTask : Runnable {
-        override fun run() {
-            if (Log.IS_DEBUG) Log.logDebug(TAG, "UpdateWakeLockTask.run()")
-
-            wakeLock.acquire(WAKE_LOCK_INTERVAL_MILLIS + 1000)
-            App.ui.postDelayed(this, WAKE_LOCK_INTERVAL_MILLIS)
-        }
-    }
-
     companion object {
         private const val TAG = "WebViewWindowService"
 
         private const val ONGOING_NOTIFICATION_CHANNEL = "ongoing"
         private const val ONGOING_NOTIFICATION_ID = 100
 
-        private const val WAKE_LOCK_INTERVAL_MILLIS: Long = 30 * 60 * 1000
     }
 }

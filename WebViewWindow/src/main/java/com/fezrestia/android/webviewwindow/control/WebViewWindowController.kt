@@ -5,6 +5,7 @@ package com.fezrestia.android.webviewwindow.control
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.PowerManager
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.App
 import com.fezrestia.android.webviewwindow.Constants
@@ -18,11 +19,22 @@ import org.json.JSONArray
  * @param context
  */
 class WebViewWindowController(private val context: Context) {
+
+    private val wakeLock: PowerManager.WakeLock
+    private var updateWakeLockTask: UpdateWakeLockTask? = null
+
+    init {
+        val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = pm.newWakeLock(
+                PowerManager.PARTIAL_WAKE_LOCK,
+                Constants.WAKE_LOCK_NAME)
+    }
+
     /**
      * Release ALL references.
      */
     fun release() {
-        // NOP.
+        wakeLock.release() // Fail safe.
     }
 
     /**
@@ -31,7 +43,11 @@ class WebViewWindowController(private val context: Context) {
     fun start() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "start() : E")
 
-        // NOP.
+        // Acquire WakeLock immediately.
+        UpdateWakeLockTask().let { task ->
+            App.ui.post(task)
+            updateWakeLockTask = task
+        }
 
         if (Log.IS_DEBUG) Log.logDebug(TAG, "start() : X")
     }
@@ -42,9 +58,23 @@ class WebViewWindowController(private val context: Context) {
     fun stop() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "stop() : E")
 
-        // NOP.
+        // Remove update task.
+        updateWakeLockTask?.let { task ->
+            App.ui.removeCallbacks(task)
+            updateWakeLockTask = null
+        }
+        wakeLock.release()
 
         if (Log.IS_DEBUG) Log.logDebug(TAG, "stop() : X")
+    }
+
+    private inner class UpdateWakeLockTask : Runnable {
+        override fun run() {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "UpdateWakeLockTask.run()")
+
+            wakeLock.acquire(WAKE_LOCK_INTERVAL_MILLIS + 1000)
+            App.ui.postDelayed(this, WAKE_LOCK_INTERVAL_MILLIS)
+        }
     }
 
     /**
@@ -97,10 +127,6 @@ class WebViewWindowController(private val context: Context) {
         return results
     }
 
-    companion object {
-        private const val TAG = "WebViewWindowController"
-    }
-
     /**
      * Start Chrome Custom Tab.
      *
@@ -116,5 +142,12 @@ class WebViewWindowController(private val context: Context) {
         baseAct.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         baseAct.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
         context.startActivity(baseAct)
+    }
+
+    companion object {
+        private const val TAG = "WebViewWindowController"
+
+        private const val WAKE_LOCK_INTERVAL_MILLIS: Long = 30 * 60 * 1000
+
     }
 }
