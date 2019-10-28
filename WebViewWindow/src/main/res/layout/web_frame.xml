@@ -21,7 +21,8 @@
     <FrameLayout
         android:id="@+id/slider_grip_container"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        tools:ignore="RtlHardcoded"
     >
         <ImageView
                 android:id="@+id/slider_grip"
@@ -29,7 +30,14 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="left|top"
                 android:contentDescription="@string/app_name"
-                tools:ignore="RtlHardcoded"
+        />
+        <ImageView
+                android:id="@+id/favicon_view"
+                android:layout_width="@dimen/favicon_size"
+                android:layout_height="@dimen/favicon_size"
+                android:layout_gravity="center"
+                android:contentDescription="@string/app_name"
         />
     </FrameLayout>
+
 </com.fezrestia.android.webviewwindow.view.WebFrame>

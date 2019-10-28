@@ -2,7 +2,9 @@
 <resources>
 
     <dimen name="grip_width">24dp</dimen>
-    <dimen name="grip_height">48dp</dimen>
+    <dimen name="grip_height">24dp</dimen>
+
+    <dimen name="favicon_size">20dp</dimen>
 
     <dimen name="right_bottom_icon_size">24dp</dimen>
 

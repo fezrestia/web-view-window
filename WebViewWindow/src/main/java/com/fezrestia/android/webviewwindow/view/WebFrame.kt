@@ -4,6 +4,7 @@ package com.fezrestia.android.webviewwindow.view
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Point
 import android.graphics.Rect
 import android.os.Message
@@ -58,6 +59,10 @@ class WebFrame(
     private inner class ExtendedWebViewCallbackImpl : ExtendedWebView.Callback {
         override fun onNewWindowRequested(msg: Message) {
             callback?.onOpenNewWindowRequested(msg)
+        }
+
+        override fun onFaviconUpdated(favicon: Bitmap) {
+            favicon_view.setImageBitmap(favicon)
         }
     }
 
@@ -298,9 +303,9 @@ class WebFrame(
         }
 
         // Grip position.
-        val layoutParams = slider_grip.layoutParams as FrameLayout.LayoutParams
+        val layoutParams = slider_grip_container.layoutParams as LayoutParams
         layoutParams.topMargin = topMargin
-        slider_grip.layoutParams = layoutParams
+        slider_grip_container.layoutParams = layoutParams
 
         // Grip icon.
         if (isTopFrame) {
@@ -324,11 +329,11 @@ class WebFrame(
     fun getCurrentUrl(): String { return web_view.url }
 
     fun showGrip() {
-        slider_grip.visibility = FrameLayout.VISIBLE
+        slider_grip_container.visibility = FrameLayout.VISIBLE
     }
 
     fun hideGrip() {
-        slider_grip.visibility = FrameLayout.INVISIBLE
+        slider_grip_container.visibility = FrameLayout.INVISIBLE
     }
 
     companion object {

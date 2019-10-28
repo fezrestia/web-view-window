@@ -5,6 +5,7 @@ package com.fezrestia.android.webviewwindow.view
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.http.SslError
 import android.os.Handler
 import android.os.HandlerThread
@@ -45,6 +46,7 @@ class ExtendedWebView(
      */
     interface Callback {
         fun onNewWindowRequested(msg: Message)
+        fun onFaviconUpdated(favicon: Bitmap)
     }
 
     private inner class EvalJsCallback : ValueCallback<String> {
@@ -245,6 +247,14 @@ class ExtendedWebView(
     }
 
     private inner class WebViewClientImpl : WebViewClient() {
+        override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onPageStarted()")
+
+            if (favicon != null) {
+                callback?.onFaviconUpdated(favicon)
+            }
+        }
+
         override fun onPageFinished(view: WebView, url: String) {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "onPageFinished()")
             // NOP.
@@ -355,6 +365,12 @@ class ExtendedWebView(
             callback?.onNewWindowRequested(resultMsg)
 
             return true
+        }
+
+        override fun onReceivedIcon(view: WebView, favicon: Bitmap) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onReceivedIcon()")
+
+            callback?.onFaviconUpdated(favicon)
         }
     }
 

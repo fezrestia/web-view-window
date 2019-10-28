@@ -112,7 +112,7 @@ class WebViewWindowService : Service() {
         if (intent.action == null) {
             Log.logError(TAG, "ACTION == NULL")
         } else {
-            Log.logDebug(TAG, "ACTION = ${intent.action}")
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "ACTION = ${intent.action}")
             when (intent.action) {
                 Constants.INTENT_ACTION_START_OVERLAY_WINDOW -> {
                     controller.start()
