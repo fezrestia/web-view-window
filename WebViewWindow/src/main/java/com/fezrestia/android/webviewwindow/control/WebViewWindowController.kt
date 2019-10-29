@@ -34,7 +34,10 @@ class WebViewWindowController(private val context: Context) {
      * Release ALL references.
      */
     fun release() {
-        wakeLock.release() // Fail safe.
+        // Fail safe.
+        if (wakeLock.isHeld) {
+            wakeLock.release()
+        }
     }
 
     /**
