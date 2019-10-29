@@ -215,6 +215,13 @@ class WebFrame(
             popup.gravity = Gravity.RIGHT
             popup.setOnMenuItemClickListener(OnMenuItemClickListenerImpl())
             popup.setOnDismissListener(OnDismissListenerImpl())
+
+            // Remove domain specific menu.
+            if (getYoutubeVideoId(getCurrentUrl()) == null) {
+                // This URL can NOT be converted to embed youtube URL.
+                popup.menu.removeItem(R.id.popup_menu_youtube_endless_loop)
+            }
+
             popup.show()
 
             return true
@@ -239,6 +246,13 @@ class WebFrame(
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "## Popup : Open on Chrome Custom Tab")
                         callback?.onStartChromeCustomTabRequired(web_view.url)
                     }
+                    R.id.popup_menu_youtube_endless_loop -> {
+                        if (Log.IS_DEBUG) Log.logDebug(TAG, "## Popup : Youtube:EndlessLoop")
+                        val videoId = getYoutubeVideoId(getCurrentUrl())
+                        if (videoId != null) {
+                            loadYoutubeEndlessLoop(videoId)
+                        }
+                    }
                 }
 
                 return true
@@ -253,6 +267,31 @@ class WebFrame(
                 menu.setOnMenuItemClickListener(null)
                 menu.setOnDismissListener(null)
             }
+        }
+
+        private fun getYoutubeVideoId(url: String): String? {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "## URL = $url")
+
+            val videoIdRegex = Regex(
+                    """\.youtube\.com/watch\?v=(.+)""",
+                    setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+            val videoIdResult = videoIdRegex.find(url)
+
+            val videoId = if (videoIdResult != null) {
+                videoIdResult.groupValues[1]
+            } else {
+                Log.logError(TAG, "## Failed to identify Youtube video ID.")
+                return null
+            }
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "## Video ID = $videoId")
+
+            return videoId
+        }
+
+        private fun loadYoutubeEndlessLoop(videoId: String) {
+            val endlessLoopUrl = "https://www.youtube.com/embed/${videoId}?loop=1&playlist=${videoId}&autoplay=1"
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "## Endless Loop URL = $endlessLoopUrl")
+            loadUrl(endlessLoopUrl)
         }
     }
 

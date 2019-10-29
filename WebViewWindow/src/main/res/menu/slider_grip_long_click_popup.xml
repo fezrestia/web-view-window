@@ -14,4 +14,8 @@
         android:id="@+id/popup_menu_open_on_chrome_custom_tab"
         android:title="@string/popup_menu_title_open_on_chrome_custom_tab"
     />
+    <item
+        android:id="@+id/popup_menu_youtube_endless_loop"
+        android:title="@string/popup_menu_title_youtube_endless_loop"
+    />
 </menu>
