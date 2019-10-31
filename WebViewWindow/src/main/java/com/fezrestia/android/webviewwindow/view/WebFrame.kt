@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Point
-import android.graphics.Rect
 import android.os.Message
 import android.util.AttributeSet
 import android.view.*
@@ -34,7 +33,8 @@ class WebFrame(
     private val DRAWABLE_SLIDER_GRIP = resources.getDrawable(R.drawable.slider_grip, null)
 
     private var callback: Callback? = null
-    private var rightBottomIconsContainerHeight: Int = 0
+    private lateinit var webFrameContainerView: View
+    private lateinit var rightBottomIconsContainerView: View
 
     private var frameOrder: Int = 0
     private var totalFrameCount: Int = 0
@@ -70,11 +70,16 @@ class WebFrame(
      * Initialize WebFrame.
      *
      * @param callback
-     * @param rightBottomIconsContainerHeight
+     * @param webFrameContainerView
+     * @param rightBottomIconsContainerView
      */
-    fun initialize(callback: Callback, rightBottomIconsContainerHeight:Int) {
+    fun initialize(
+            callback: Callback,
+            webFrameContainerView: View,
+            rightBottomIconsContainerView:View) {
         this.callback = callback
-        this.rightBottomIconsContainerHeight = rightBottomIconsContainerHeight
+        this.webFrameContainerView = webFrameContainerView
+        this.rightBottomIconsContainerView = rightBottomIconsContainerView
 
         // Web view.
         web_view.initialize(ExtendedWebViewCallbackImpl())
@@ -313,44 +318,51 @@ class WebFrame(
         this.frameOrder = frameOrder
         this.totalFrameCount = totalFrameCount
         this.isTopFrame = isTopFrame
+
+        requestLayout()
     }
 
     private fun updateSliderGripPosition() {
-        val curRect = Rect()
-        getLocalVisibleRect(curRect)
-
-//        if (Log.IS_DEBUG) {
-//            Log.logDebug(TAG, "## WebFrame WxH = ${curRect.width()} x ${curRect.height()}")
-//        }
-
         val topMargin: Int
         if (totalFrameCount == 1) {
             // Only 1 frame.
             topMargin = 0
 
-//            if (Log.IS_DEBUG) Log.logDebug(TAG, "## Top frame")
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "## order=$frameOrder, Only 1 frame")
         } else {
-            val tabRange = curRect.height() - SLIDER_GRIP_HEIGHT_PIX - rightBottomIconsContainerHeight
+            val containerHeight = webFrameContainerView.height
+            val bottomIconsHeight = rightBottomIconsContainerView.height
+            val tabRange = containerHeight - SLIDER_GRIP_HEIGHT_PIX - bottomIconsHeight
             val tabStep = min(tabRange / (totalFrameCount - 1), SLIDER_GRIP_HEIGHT_PIX)
+
             topMargin = tabStep * frameOrder
 
-//            if (Log.IS_DEBUG) {
-//                Log.logDebug(TAG, "## tabRange = $tabRange")
-//                Log.logDebug(TAG, "## tabStep = $tabStep")
-//                Log.logDebug(TAG, "## topMargin = $topMargin")
-//            }
+            if (Log.IS_DEBUG) {
+                Log.logDebug(TAG, "## order=$frameOrder, containerHeight=$containerHeight")
+                Log.logDebug(TAG, "## order=$frameOrder, bottomIconsHeight=$bottomIconsHeight")
+                Log.logDebug(TAG, "## order=$frameOrder, tabRange = $tabRange")
+                Log.logDebug(TAG, "## order=$frameOrder, tabStep = $tabStep")
+                Log.logDebug(TAG, "## order=$frameOrder, topMargin = $topMargin")
+            }
         }
 
         // Grip position.
         val layoutParams = slider_grip_container.layoutParams as LayoutParams
-        layoutParams.topMargin = topMargin
-        slider_grip_container.layoutParams = layoutParams
+        if (layoutParams.topMargin != topMargin) {
+            layoutParams.topMargin = topMargin
+            slider_grip_container.layoutParams = layoutParams
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "## order=$frameOrder, LayoutParams updated.")
+        }
 
         // Grip icon.
-        if (isTopFrame) {
-            slider_grip.setImageDrawable(DRAWABLE_SLIDER_GRIP_SELECTED)
+        val nextDrawable = if (isTopFrame) {
+            DRAWABLE_SLIDER_GRIP_SELECTED
         } else {
-            slider_grip.setImageDrawable(DRAWABLE_SLIDER_GRIP)
+            DRAWABLE_SLIDER_GRIP
+        }
+        if (slider_grip.drawable != nextDrawable) {
+            slider_grip.setImageDrawable(nextDrawable)
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "## order=$frameOrder, Drawable updated..")
         }
     }
 

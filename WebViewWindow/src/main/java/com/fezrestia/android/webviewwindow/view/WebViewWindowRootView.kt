@@ -142,22 +142,27 @@ class WebViewWindowRootView(
     /**
      * Add new WebFrame to tail of stack with URL.
      */
-    fun addNewWebFrameWithUrl(url: String) {
-        addNewWebFrame(url, null)
+    fun addNewWebFrameToTailWithUrl(url: String) {
+        val targetIndex = webFrames.lastIndex + 1 // Add to tail end.
+        addNewWebFrame(url, null, targetIndex)
     }
 
     /**
      * Add new WebFrame to tail of stack with Transport message.
      */
-    fun addNewWebFrameWithTransportMsg(msg: Message) {
-        addNewWebFrame(null, msg)
+    fun addNewWebFrameUnderTopWithTransportMsg(msg: Message) {
+        val targetIndex = webFrames.indexOf(topWebFrame) + 1
+        addNewWebFrame(null, msg, targetIndex)
     }
 
-    private fun addNewWebFrame(url: String?, msg: Message?) {
+    private fun addNewWebFrame(url: String?, msg: Message?, targetIndex: Int) {
         val newWebFrame = WebFrame.inflate(context)
-        newWebFrame.initialize(WebFrameCallbackImpl(), right_bottom_icon_container.height)
+        newWebFrame.initialize(
+                WebFrameCallbackImpl(),
+                web_frame_container,
+                right_bottom_icon_container)
 
-        webFrames.add(newWebFrame)
+        webFrames.add(targetIndex, newWebFrame)
         web_frame_container.addView(newWebFrame)
 
         if (url != null) {
@@ -454,7 +459,7 @@ class WebViewWindowRootView(
         override fun onOpenNewWindowRequested(msg: Message) {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "onOpenNewWindowRequested()")
 
-            addNewWebFrameWithTransportMsg(msg)
+            addNewWebFrameUnderTopWithTransportMsg(msg)
         }
 
         override fun onCloseRequired(frameOrder: Int) {
