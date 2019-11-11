@@ -321,8 +321,12 @@ class WebViewWindowRootView(
      * Toggle WebView window is on screen or not.
      * If WebView window is not on screen even slider grip, WebView is paused.
      * In other words, even if WebView window is closed, WebView is resumed.
+     *
+     * @return Boolean Show/Hide state is changed or not.
      */
-    fun toggleShowHide() {
+    fun toggleShowHide(): Boolean {
+        var isStateChanged = true
+
         when {
             windowLayoutParams.x == WINDOW_HIDDEN_POS_X -> {
                 // Hidden -> Closed.
@@ -340,11 +344,22 @@ class WebViewWindowRootView(
 
             else -> {
                 // NOP. Maybe now on Opened.
-                return
+                isStateChanged = false
             }
         }
 
         windowManager.updateViewLayout(this, windowLayoutParams)
+
+        return isStateChanged
+    }
+
+    /**
+     * Window is hidden position or not.
+     *
+     * @return
+     */
+    fun isHidden(): Boolean {
+        return windowLayoutParams.x == WINDOW_HIDDEN_POS_X
     }
 
     fun startSlideInWindow() {

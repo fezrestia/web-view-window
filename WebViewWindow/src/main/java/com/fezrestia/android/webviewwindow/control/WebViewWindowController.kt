@@ -41,7 +41,8 @@ class WebViewWindowController(private val context: Context) {
     }
 
     /**
-     * Start.
+     * Activate overlay window interaction.
+     * After this API called, WakeLock is acquired until stop() is called.
      */
     fun start() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "start() : E")
@@ -56,7 +57,8 @@ class WebViewWindowController(private val context: Context) {
     }
 
     /**
-     * Stop.
+     * De-activate overlay window interaction.
+     * WakeLock will be released, so WebFrame contents may be paused/stopped.
      */
     fun stop() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "stop() : E")
@@ -66,7 +68,9 @@ class WebViewWindowController(private val context: Context) {
             App.ui.removeCallbacks(task)
             updateWakeLockTask = null
         }
-        wakeLock.release()
+        if (wakeLock.isHeld) {
+            wakeLock.release()
+        }
 
         if (Log.IS_DEBUG) Log.logDebug(TAG, "stop() : X")
     }

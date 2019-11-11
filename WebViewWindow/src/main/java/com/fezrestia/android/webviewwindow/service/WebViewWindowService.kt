@@ -143,7 +143,14 @@ class WebViewWindowService : Service() {
                 }
 
                 Constants.INTENT_ACTION_TOGGLE_OVERLAY_VISIBILITY -> {
-                    view.toggleShowHide()
+                    val isStateChanged = view.toggleShowHide()
+                    if (isStateChanged) {
+                        if (view.isHidden()) {
+                            controller.stop()
+                        } else {
+                            controller.start()
+                        }
+                    }
                 }
 
                 Constants.INTENT_ACTION_OPEN_OVERLAY_WINDOW -> {
