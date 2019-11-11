@@ -14,12 +14,15 @@ object Constants {
     const val SP_KEY_WWW_ENABLE_DISABLE = "sp-key-www-enable-disable"
     /** SP Key, base load URL.  */
     const val SP_KEY_BASE_LOAD_URL = "sp-key-base-load-url"
-    /** SP Key, URLs on overlay window closed. */
-    const val SP_KEY_LAST_URLS_JSON = "sp-key-last-urls-json"
+    /** SP Key, WebView states on overlay window closed. */
+    const val SP_KEY_LAST_WEB_VIEW_STATES_JSON = "sp-key-last-web-view-state-json"
 
     /** Default load URL.  */
     const val DEFAULT_BASE_LOAD_URL = "https://www.google.com"
 
     /** WakeLock name. */
     const val WAKE_LOCK_NAME = "WebViewWindow:WakeLock"
+
+    /** WebView state key. */
+    const val WEB_VIEW_STATE_BUNDLE_KEY = "WEBVIEW_CHROMIUM_STATE"
 }

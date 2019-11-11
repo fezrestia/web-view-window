@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.graphics.Point
+import android.os.Bundle
 import android.os.Message
 import android.util.AttributeSet
 import android.view.Gravity
@@ -144,7 +145,7 @@ class WebViewWindowRootView(
      */
     fun addNewWebFrameToTailWithUrl(url: String) {
         val targetIndex = webFrames.lastIndex + 1 // Add to tail end.
-        addNewWebFrame(url, null, targetIndex)
+        addNewWebFrame(url, null, null, targetIndex)
     }
 
     /**
@@ -152,10 +153,18 @@ class WebViewWindowRootView(
      */
     fun addNewWebFrameUnderTopWithTransportMsg(msg: Message) {
         val targetIndex = webFrames.indexOf(topWebFrame) + 1
-        addNewWebFrame(null, msg, targetIndex)
+        addNewWebFrame(null, msg, null, targetIndex)
     }
 
-    private fun addNewWebFrame(url: String?, msg: Message?, targetIndex: Int) {
+    /**
+     * Add new WebFrame to tail of stack with state Bundle.
+     */
+    fun addNewWebFrameToTailWithState(state: Bundle) {
+        val targetIndex = webFrames.lastIndex + 1 // Add to tail end.
+        addNewWebFrame(null, null, state, targetIndex)
+    }
+
+    private fun addNewWebFrame(url: String?, msg: Message?, state: Bundle?, targetIndex: Int) {
         val newWebFrame = WebFrame.inflate(context)
         newWebFrame.initialize(
                 WebFrameCallbackImpl(),
@@ -170,6 +179,9 @@ class WebViewWindowRootView(
         }
         if (msg != null) {
             newWebFrame.loadMsg(msg)
+        }
+        if (state != null) {
+            newWebFrame.loadState(state)
         }
 
         // Add new frame as top.
@@ -386,9 +398,9 @@ class WebViewWindowRootView(
         }
     }
 
-    fun getCurrentUrls(): List<String> {
+    fun getWebViewStates(): List<Bundle> {
         return webFrames.map { webFrame ->
-            webFrame.getCurrentUrl()
+            webFrame.getWebViewState()
         }
     }
 

@@ -119,21 +119,21 @@ class WebViewWindowService : Service() {
 
                     view.addToOverlayWindow()
 
-                    val urls = controller.loadUrls()
-                    if (urls.isEmpty()) {
+                    val states = controller.loadWebViewStates()
+                    if (states.isEmpty()) {
                         // Open 1 default WebFrame.
                         view.addNewWebFrameToTailWithUrl(controller.getDefaultUrl())
                     } else {
-                        // Restore last URLs.
-                        urls.forEach { url ->
-                            view.addNewWebFrameToTailWithUrl(url)
+                        // Restore last WebView states.
+                        states.forEach { state ->
+                            view.addNewWebFrameToTailWithState(state)
                         }
                     }
                 }
 
                 Constants.INTENT_ACTION_STOP_OVERLAY_WINDOW -> {
-                    val urls = view.getCurrentUrls()
-                    controller.saveUrls(urls)
+                    val states = view.getWebViewStates()
+                    controller.saveWebViewStates(states)
 
                     view.removeFromOverlayWindow()
 

@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Point
+import android.os.Bundle
 import android.os.Message
 import android.util.AttributeSet
 import android.view.*
@@ -116,6 +117,15 @@ class WebFrame(
         val transport = msg.obj as WebView.WebViewTransport
         transport.webView = web_view
         msg.sendToTarget()
+    }
+
+    /**
+     * Start loading with WebView state of Bundle.
+     *
+     * @param state
+     */
+    fun loadState(state: Bundle) {
+        web_view.restoreState(state)
     }
 
     /**
@@ -383,6 +393,20 @@ class WebFrame(
     fun canGoBack(): Boolean { return web_view.canGoBack() }
     fun goBack() { web_view.goBack() }
     fun getCurrentUrl(): String { return web_view.url }
+
+    /**
+     * Get current WebView state as Bundle.
+     *
+     * @return Current WebView state.
+     */
+    fun getWebViewState(): Bundle {
+        val state = Bundle()
+        web_view.saveState(state)
+
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "bundle state = $state")
+
+        return state
+    }
 
     fun showGrip() {
         slider_grip_container.visibility = FrameLayout.VISIBLE

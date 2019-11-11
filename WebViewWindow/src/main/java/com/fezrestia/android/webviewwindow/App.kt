@@ -46,7 +46,7 @@ class App : Application() {
 
         // SharedPreferences version key.
         private const val KEY_SP_VER = "key-sp-ver"
-        private const val VAL_SP_VER = 1
+        private const val VAL_SP_VER = 2
 
         lateinit var ui: Handler
             private set

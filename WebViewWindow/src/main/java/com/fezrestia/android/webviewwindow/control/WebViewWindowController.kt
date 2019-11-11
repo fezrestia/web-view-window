@@ -5,7 +5,9 @@ package com.fezrestia.android.webviewwindow.control
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.os.PowerManager
+import android.util.Base64
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.App
 import com.fezrestia.android.webviewwindow.Constants
@@ -101,36 +103,60 @@ class WebViewWindowController(private val context: Context) {
     }
 
     /**
-     * Save URLs to SharedPreferences.
+     * Save WebView states to SharedPreferences.
      *
-     * @param urls
+     * @param states
      */
-    fun saveUrls(urls: List<String>) {
-        val jsonArray = JSONArray(urls)
+    fun saveWebViewStates(states: List<Bundle>) {
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "saveWebViewStates() : E")
+
+        val encodedList = mutableListOf<String>()
+
+        states.forEach { state ->
+            val bytes: ByteArray = state[Constants.WEB_VIEW_STATE_BUNDLE_KEY] as ByteArray
+            val encoded: String = Base64.encodeToString(bytes, Base64.DEFAULT)
+
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "BASE64 = $encoded")
+
+            encodedList.add(encoded)
+        }
+
+        val jsonArray = JSONArray(encodedList)
         val serialized = jsonArray.toString()
 
         App.sp.edit().putString(
-                Constants.SP_KEY_LAST_URLS_JSON,
+                Constants.SP_KEY_LAST_WEB_VIEW_STATES_JSON,
                 serialized)
                 .apply()
+
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "saveWebViewStates() : X")
     }
 
     /**
-     * Load URLs from SharedPreferences.
+     * Load WebView states from SharedPreferences.
      *
-     * @return URLs
+     * @return WebView states.
      */
-    fun loadUrls(): List<String> {
-        val serialized = App.sp.getString(Constants.SP_KEY_LAST_URLS_JSON, "[]") // Default empty.
+    fun loadWebViewStates(): List<Bundle> {
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "loadWebViewStates() : E")
+
+        val serialized = App.sp.getString(Constants.SP_KEY_LAST_WEB_VIEW_STATES_JSON, "[]") // Default empty.
         val deserialized = JSONArray(serialized)
 
-        val results = mutableListOf<String>() // Empty, used for default.
+        val results = mutableListOf<Bundle>() // Empty, used for default.
 
         for (i in 0 until deserialized.length()) {
-            val url: String = deserialized.get(i) as String
-            results.add(url)
+            val encoded: String = deserialized.get(i) as String
+
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "BASE64 = $encoded")
+
+            val bytes = Base64.decode(encoded, Base64.DEFAULT)
+            val state = Bundle()
+            state.putByteArray(Constants.WEB_VIEW_STATE_BUNDLE_KEY, bytes)
+            results.add(state)
         }
 
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "loadWebViewStates() : X")
         return results
     }
 
