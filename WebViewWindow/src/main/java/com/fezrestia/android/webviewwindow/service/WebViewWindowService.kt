@@ -50,7 +50,7 @@ class WebViewWindowService : Service() {
 
         return Notification.Builder(this, ONGOING_NOTIFICATION_CHANNEL)
                 .setContentTitle(getText(R.string.ongoing_notification))
-                .setSmallIcon(R.drawable.ic_launcher)
+                .setSmallIcon(R.drawable.ongoing_notification_icon)
                 .setContentIntent(notificationContent)
                 .build()
     }
