@@ -12,4 +12,6 @@
     <string name="popup_menu_title_open_on_chrome_custom_tab">Open on Chrome Custom Tab</string>
     <string name="popup_menu_title_youtube_endless_loop">Youtube:EndlessLoop</string>
 
+    <string name="http_warning_indicator">HTTP</string>
+
 </resources>

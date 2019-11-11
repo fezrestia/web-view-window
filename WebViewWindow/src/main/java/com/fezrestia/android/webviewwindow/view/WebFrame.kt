@@ -64,6 +64,11 @@ class WebFrame(
         override fun onFaviconUpdated(favicon: Bitmap) {
             favicon_view.setImageBitmap(favicon)
         }
+
+        override fun onNewUrlLoading(url: String) {
+            val visible = if (url.startsWith("http://")) View.VISIBLE else View.INVISIBLE
+            http_indicator.visibility = visible
+        }
     }
 
     /**

@@ -8,14 +8,41 @@
     android:orientation="horizontal"
 >
     <!-- Web View -->
-    <com.fezrestia.android.webviewwindow.view.ExtendedWebView
-        android:id="@+id/web_view"
+    <RelativeLayout
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-    />
+    >
+        <com.fezrestia.android.webviewwindow.view.ExtendedWebView
+            android:id="@+id/web_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+        />
+
+        <FrameLayout
+            android:id="@+id/http_indicator"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="invisible"
+            android:background="@drawable/http_warning_indicator_border"
+        >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/http_warning_indicator"
+                android:textColor="@color/red"
+                android:textStyle="bold"
+                android:textSize="@dimen/http_warning_text_size"
+                android:paddingLeft="@dimen/http_warning_text_horizontal_padding"
+                android:paddingRight="@dimen/http_warning_text_horizontal_padding"
+                android:layout_gravity="right|top"
+                android:background="@drawable/http_warning_text_border"
+                tools:ignore="RtlHardcoded"
+            />
+        </FrameLayout>
+    </RelativeLayout>
 
     <!-- Slider Grip -->
     <FrameLayout

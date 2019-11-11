@@ -45,8 +45,26 @@ class ExtendedWebView(
      * Extended WebView callback interface.
      */
     interface Callback {
+        /**
+         * Request open URL on new WebFrame.
+         *
+         * @param msg Message for WebViewTransport to open new URL.
+         */
         fun onNewWindowRequested(msg: Message)
+
+        /**
+         * Called every on favicon image is loaded for current page.
+         *
+         * @param favicon
+         */
         fun onFaviconUpdated(favicon: Bitmap)
+
+        /**
+         * Called every on URL is changed.
+         *
+         * @param url
+         */
+        fun onNewUrlLoading(url: String)
     }
 
     private inner class EvalJsCallback : ValueCallback<String> {
@@ -253,6 +271,8 @@ class ExtendedWebView(
             if (favicon != null) {
                 callback?.onFaviconUpdated(favicon)
             }
+
+            callback?.onNewUrlLoading(url)
         }
 
         override fun onPageFinished(view: WebView, url: String) {
