@@ -64,10 +64,12 @@ android {
 
     // Define APK name and replace.
     applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            if (variant.name == 'release') {
-                if (output.outputFile != null && output.outputFile.name.endsWith('.apk')) {
-                    outputFileName = "WebViewWindow.apk"
+        variant.outputs.each { output ->
+            if (output.outputFileName.endsWith(".apk")) {
+                switch (variant.name) {
+                    case "release":
+                        output.outputFileName = "WebViewWindow.apk"
+                        break
                 }
             }
         }
