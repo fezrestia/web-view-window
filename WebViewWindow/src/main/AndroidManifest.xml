@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.fezrestia.android.webviewwindow"
 
-    android:versionCode="411"
-    android:versionName="1.8.5-411"
+    android:versionCode="420"
+    android:versionName="1.8.6-420"
 >
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -58,6 +58,7 @@
         >
             <intent-filter>
                 <action android:name="com.fezrestia.android.webviewwindow.intent.ACTION_TOGGLE_OVERLAY_VISIBILITY" />
+                <action android:name="com.fezrestia.android.webviewwindow.intent.ACTION_TOGGLE_ENABLE_DISABLE" />
             </intent-filter>
         </receiver>
 
@@ -70,6 +71,16 @@
             android:name="android.webkit.WebView.MetricsOptOut"
             android:value="true"
         />
+
+        <receiver android:name=".widget.EnableDisableToggler">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_enable_disable_toggler_info"
+            />
+        </receiver>
 
     </application>
 </manifest>

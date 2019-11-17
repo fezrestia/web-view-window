@@ -20,7 +20,7 @@ import com.fezrestia.android.webviewwindow.Constants
 import com.fezrestia.android.webviewwindow.R
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.App
-import com.fezrestia.android.webviewwindow.service.WebViewWindowService
+import com.fezrestia.android.webviewwindow.receiver.WebViewWindowReceiver
 
 class SettingActivity : AppCompatActivity() {
     private val TAG = "SettingActivity"
@@ -37,14 +37,7 @@ class SettingActivity : AppCompatActivity() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.setting, rootKey)
 
-            val onChangeListenerImpl = OnChangeListenerImpl()
-
             // Setup static preference options.
-
-            // En/Disable.
-            val enDisPref: SwitchPreference = findPreference(Constants.SP_KEY_WWW_ENABLE_DISABLE)!!
-            enDisPref.isChecked = App.isEnabled
-            enDisPref.onPreferenceChangeListener = onChangeListenerImpl
 
         }
 
@@ -52,8 +45,14 @@ class SettingActivity : AppCompatActivity() {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "onStart()")
             super.onStart()
 
+            val onChangeListenerImpl = OnChangeListenerImpl()
+
             // Setup dynamic preference options.
 
+            // En/Disable.
+            val enDisPref: SwitchPreference = findPreference(Constants.SP_KEY_WWW_ENABLE_DISABLE)!!
+            enDisPref.isChecked = App.isEnabled
+            enDisPref.onPreferenceChangeListener = onChangeListenerImpl
         }
 
         override fun onStop() {
@@ -68,27 +67,14 @@ class SettingActivity : AppCompatActivity() {
             override fun onPreferenceChange(preference: Preference?, newValue: Any?): Boolean {
                 when (preference?.key) {
                     Constants.SP_KEY_WWW_ENABLE_DISABLE -> {
-                        val isChecked: Boolean = newValue as Boolean
                         val context = requireContext()
 
-                        val service = if (isChecked) {
-                            Intent(Constants.INTENT_ACTION_START_OVERLAY_WINDOW)
-                        } else {
-                            Intent(Constants.INTENT_ACTION_STOP_OVERLAY_WINDOW)
-                        }
-                        service.setClass(
-                            context.applicationContext,
-                            WebViewWindowService::class.java)
+                        val endisToggleIntent = Intent(
+                                context.applicationContext,
+                                WebViewWindowReceiver::class.java)
+                        endisToggleIntent.action = Constants.INTENT_ACTION_TOGGLE_ENABLE_DISABLE
 
-                        val component = context.startForegroundService(service)
-
-                        if (Log.IS_DEBUG) {
-                            if (component != null) {
-                                Log.logDebug(TAG, "startForegroundService() : Component = $component")
-                            } else {
-                                Log.logDebug(TAG, "startForegroundService() : Component = NULL")
-                            }
-                        }
+                        context.sendBroadcast(endisToggleIntent)
                     }
 
                     Constants.SP_KEY_BASE_LOAD_URL -> {
