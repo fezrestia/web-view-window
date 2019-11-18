@@ -66,9 +66,16 @@ android {
     applicationVariants.all { variant ->
         variant.outputs.each { output ->
             if (output.outputFileName.endsWith(".apk")) {
+                def name = getArchivesBaseName()
+                def ver = variant.versionName
+
                 switch (variant.name) {
+                    case "debug":
+                        // NOP.
+                        break
+
                     case "release":
-                        output.outputFileName = "WebViewWindow.apk"
+                        output.outputFileName = "${name}_${ver}.apk"
                         break
                 }
             }

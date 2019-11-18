@@ -4,9 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.fezrestia.android.webviewwindow"
 
-    android:versionCode="420"
-    android:versionName="1.8.6-420"
+    android:versionCode="467"
+    android:versionName="1.9.1-467"
 >
+<!--                     | | | |-> incremental build count
+                         | | |-> patch
+                         | |-> minor
+                         |-> major
+-->
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.INTERNET" />
