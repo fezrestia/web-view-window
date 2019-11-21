@@ -3,6 +3,8 @@
 package com.fezrestia.android.webviewwindow.view
 
 import android.annotation.SuppressLint
+import android.content.ClipDescription
+import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Point
@@ -14,9 +16,12 @@ import android.webkit.WebView
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.PopupMenu
+import android.widget.TextView
 import com.fezrestia.android.util.Log
+import com.fezrestia.android.webviewwindow.BuildConfig
 import com.fezrestia.android.webviewwindow.R
 import kotlinx.android.synthetic.main.web_frame.view.*
+import org.apache.commons.validator.routines.UrlValidator
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -78,11 +83,13 @@ class WebFrame(
      * @param callback
      * @param webFrameContainerView
      * @param rightBottomIconsContainerView
+     * @param defaultUrl
      */
     fun initialize(
             callback: Callback,
             webFrameContainerView: View,
-            rightBottomIconsContainerView:View) {
+            rightBottomIconsContainerView:View,
+            defaultUrl: String?) {
         this.callback = callback
         this.webFrameContainerView = webFrameContainerView
         this.rightBottomIconsContainerView = rightBottomIconsContainerView
@@ -97,6 +104,60 @@ class WebFrame(
 
         // Per-layout process.
         viewTreeObserver.addOnGlobalLayoutListener(LayoutObserverImpl())
+
+        setupEntryView(defaultUrl)
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun setupEntryView(defaultUrl: String?) {
+        footer_label.text = "WebViewWindow:${BuildConfig.VERSION_NAME}"
+
+        base_load_url_input.hint = defaultUrl
+
+        paste_button.setOnClickListener {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "paste_button.onClick()")
+
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clipDesc = clipboard.primaryClipDescription
+
+            val hasClip: Boolean = clipboard.hasPrimaryClip()
+            val hasText: Boolean = clipDesc?.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) ?: false
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "## hasClip = $hasClip, hasText = $hasText")
+
+            if (hasClip || hasText) {
+                val textItem = clipboard.primaryClip?.getItemAt(0)?.text
+                if (textItem != null) {
+                    if (Log.IS_DEBUG) Log.logDebug(TAG, "## textItem = $textItem")
+                    base_load_url_input.setText(textItem, TextView.BufferType.EDITABLE)
+                }
+            }
+        }
+
+        load_url_button.setOnClickListener {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "load_url_button.onClick()")
+
+            val url = base_load_url_input.text.toString()
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "## URL = $url")
+
+            if (url.isEmpty()) {
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "## Load default URL = $defaultUrl")
+
+                if (defaultUrl != null) {
+                    loadUrl(defaultUrl)
+                }
+            } else {
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "## Start load.")
+
+                val schemes = arrayOf("http", "https")
+                val urlValidator = UrlValidator(schemes)
+                if (urlValidator.isValid(url)) {
+                    loadUrl(url)
+                } else {
+                    if (Log.IS_DEBUG) Log.logDebug(TAG, "## Invalid URL = $url")
+                    base_load_url_input.error = "Invalid URL"
+                }
+            }
+        }
     }
 
     /**
@@ -106,6 +167,7 @@ class WebFrame(
      */
     fun loadUrl(url: String) {
         web_view.loadUrl(url)
+        entry_view.visibility = GONE
     }
 
     /**
@@ -117,6 +179,7 @@ class WebFrame(
         val transport = msg.obj as WebView.WebViewTransport
         transport.webView = web_view
         msg.sendToTarget()
+        entry_view.visibility = GONE
     }
 
     /**
@@ -126,6 +189,7 @@ class WebFrame(
      */
     fun loadState(state: Bundle) {
         web_view.restoreState(state)
+        entry_view.visibility = GONE
     }
 
     /**

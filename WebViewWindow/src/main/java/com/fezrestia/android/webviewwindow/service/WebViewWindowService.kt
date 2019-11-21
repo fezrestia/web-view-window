@@ -97,7 +97,7 @@ class WebViewWindowService : Service() {
 
         override fun onNewWebFrameRequired() {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "onNewWebFrameRequired()")
-            view.addNewWebFrameToTailWithUrl(controller.getDefaultUrl())
+            view.addEmptyWebFrameToTail(controller.getDefaultUrl())
         }
 
         override fun onFullBrowserRequired(url: String) {
@@ -122,7 +122,7 @@ class WebViewWindowService : Service() {
                     val states = controller.loadWebViewStates()
                     if (states.isEmpty()) {
                         // Open 1 default WebFrame.
-                        view.addNewWebFrameToTailWithUrl(controller.getDefaultUrl())
+                        view.addEmptyWebFrameToTail(controller.getDefaultUrl())
                     } else {
                         // Restore last WebView states.
                         states.forEach { state ->

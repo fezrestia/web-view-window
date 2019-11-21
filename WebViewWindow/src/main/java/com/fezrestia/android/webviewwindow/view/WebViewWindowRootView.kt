@@ -141,11 +141,11 @@ class WebViewWindowRootView(
     }
 
     /**
-     * Add new WebFrame to tail of stack with URL.
+     * Add empty new WebFrame to tail of stack.
      */
-    fun addNewWebFrameToTailWithUrl(url: String) {
+    fun addEmptyWebFrameToTail(defaultUrl: String) {
         val targetIndex = webFrames.lastIndex + 1 // Add to tail end.
-        addNewWebFrame(url, null, null, targetIndex)
+        addNewWebFrame(null, null, null, defaultUrl, targetIndex)
     }
 
     /**
@@ -153,7 +153,7 @@ class WebViewWindowRootView(
      */
     fun addNewWebFrameUnderTopWithTransportMsg(msg: Message) {
         val targetIndex = webFrames.indexOf(topWebFrame) + 1
-        addNewWebFrame(null, msg, null, targetIndex)
+        addNewWebFrame(null, msg, null, null, targetIndex)
     }
 
     /**
@@ -161,15 +161,21 @@ class WebViewWindowRootView(
      */
     fun addNewWebFrameToTailWithState(state: Bundle) {
         val targetIndex = webFrames.lastIndex + 1 // Add to tail end.
-        addNewWebFrame(null, null, state, targetIndex)
+        addNewWebFrame(null, null, state, null, targetIndex)
     }
 
-    private fun addNewWebFrame(url: String?, msg: Message?, state: Bundle?, targetIndex: Int) {
+    private fun addNewWebFrame(
+            url: String?,
+            msg: Message?,
+            state: Bundle?,
+            defaultUrl: String?,
+            targetIndex: Int) {
         val newWebFrame = WebFrame.inflate(context)
         newWebFrame.initialize(
                 WebFrameCallbackImpl(),
                 web_frame_container,
-                right_bottom_icon_container)
+                right_bottom_icon_container,
+                defaultUrl)
 
         webFrames.add(targetIndex, newWebFrame)
         web_frame_container.addView(newWebFrame)

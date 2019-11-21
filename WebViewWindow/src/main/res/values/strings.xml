@@ -14,4 +14,7 @@
 
     <string name="http_warning_indicator">HTTP</string>
 
+    <string name="paste_button_label">PASTE</string>
+    <string name="load_url_button_label">GO</string>
+
 </resources>
