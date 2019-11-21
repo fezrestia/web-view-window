@@ -113,21 +113,25 @@ class WebViewWindowController(private val context: Context) {
         val encodedList = mutableListOf<String>()
 
         states.forEach { state ->
-            val bytes: ByteArray = state[Constants.WEB_VIEW_STATE_BUNDLE_KEY] as ByteArray
-            val encoded: String = Base64.encodeToString(bytes, Base64.DEFAULT)
+            state[Constants.WEB_VIEW_STATE_BUNDLE_KEY]?.let { it ->
+                val bytes = it as ByteArray
+                val encoded: String = Base64.encodeToString(bytes, Base64.DEFAULT)
 
-            if (Log.IS_DEBUG) Log.logDebug(TAG, "BASE64 = $encoded")
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "BASE64 = $encoded")
 
-            encodedList.add(encoded)
+                encodedList.add(encoded)
+            }
         }
 
-        val jsonArray = JSONArray(encodedList)
-        val serialized = jsonArray.toString()
+        if (encodedList.isNotEmpty()) {
+            val jsonArray = JSONArray(encodedList)
+            val serialized = jsonArray.toString()
 
-        App.sp.edit().putString(
-                Constants.SP_KEY_LAST_WEB_VIEW_STATES_JSON,
-                serialized)
-                .apply()
+            App.sp.edit().putString(
+                    Constants.SP_KEY_LAST_WEB_VIEW_STATES_JSON,
+                    serialized)
+                    .apply()
+        }
 
         if (Log.IS_DEBUG) Log.logDebug(TAG, "saveWebViewStates() : X")
     }
