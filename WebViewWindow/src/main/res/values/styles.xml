@@ -2,12 +2,19 @@
 
     <style
         name="TranslucentTheme"
-        parent="Theme.MaterialComponents.Light.NoActionBar"
+        parent="Theme.MaterialComponents.NoActionBar"
     >
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:windowTranslucentStatus">true</item>
+    </style>
+
+    <style
+        name="MaterialBase"
+        parent="Theme.MaterialComponents.Light"
+    >
+        <item name="colorPrimary">#AAAAAA</item>
     </style>
 
 </resources>

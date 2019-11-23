@@ -16,5 +16,6 @@
 
     <string name="paste_button_label">PASTE</string>
     <string name="load_url_button_label">GO</string>
+    <string name="invalid_url_error_msg">Invalid URL</string>
 
 </resources>

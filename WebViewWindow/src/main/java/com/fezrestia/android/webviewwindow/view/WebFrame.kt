@@ -10,6 +10,8 @@ import android.graphics.Bitmap
 import android.graphics.Point
 import android.os.Bundle
 import android.os.Message
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.*
 import android.webkit.WebView
@@ -110,9 +112,34 @@ class WebFrame(
 
     @SuppressLint("SetTextI18n")
     private fun setupEntryView(defaultUrl: String?) {
+        val invalidUrlErrorMsg = resources.getString(R.string.invalid_url_error_msg)
+
         footer_label.text = "WebViewWindow:${BuildConfig.VERSION_NAME}"
 
+        // If hit set to TextInputLayout, hint is always displayed above EditText.
         base_load_url_input.hint = defaultUrl
+
+        base_load_url_input.addTextChangedListener( object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+                // NOP.
+            }
+
+            override fun onTextChanged(text: CharSequence, start: Int, before: Int, count: Int) {
+                val url = text.toString()
+                if (url.isEmpty() || isValidUrl(url)) {
+                    base_load_url.isErrorEnabled = false
+                    base_load_url.error = null
+                } else {
+                    if (Log.IS_DEBUG) Log.logDebug(TAG, "## Invalid URL = $url")
+                    base_load_url.isErrorEnabled = true
+                    base_load_url.error = invalidUrlErrorMsg
+                }
+            }
+
+            override fun afterTextChanged(s: Editable) {
+                // NOP.
+            }
+        } )
 
         paste_button.setOnClickListener {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "paste_button.onClick()")
@@ -148,16 +175,20 @@ class WebFrame(
             } else {
                 if (Log.IS_DEBUG) Log.logDebug(TAG, "## Start load.")
 
-                val schemes = arrayOf("http", "https")
-                val urlValidator = UrlValidator(schemes)
-                if (urlValidator.isValid(url)) {
+                if (isValidUrl(url)) {
                     loadUrl(url)
                 } else {
                     if (Log.IS_DEBUG) Log.logDebug(TAG, "## Invalid URL = $url")
-                    base_load_url_input.error = "Invalid URL"
+                    base_load_url.error = invalidUrlErrorMsg
                 }
             }
         }
+    }
+
+    private fun isValidUrl(url: String): Boolean {
+        val schemes = arrayOf("http", "https")
+        val urlValidator = UrlValidator(schemes)
+        return urlValidator.isValid(url)
     }
 
     /**
