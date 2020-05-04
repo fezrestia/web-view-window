@@ -5,6 +5,7 @@ package com.fezrestia.android.webviewwindow.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.Constants
@@ -42,7 +43,11 @@ class ChromeCustomTabBaseActivity : Activity() {
                     R.anim.slide_out_to_right)
             val chromeIntent = builder.build()
             chromeIntent.intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
-            chromeIntent.launchUrl(this, this.intent.data)
+            this.intent.data?.also {
+                chromeIntent.launchUrl(this, it)
+            } ?: run {
+                Toast.makeText(this, "ERROR: URI is null", Toast.LENGTH_LONG).show()
+            }
 
             shouldBeFinished = true
 
