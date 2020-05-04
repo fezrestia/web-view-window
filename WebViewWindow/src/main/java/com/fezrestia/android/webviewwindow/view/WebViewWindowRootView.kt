@@ -164,6 +164,7 @@ class WebViewWindowRootView(
         addNewWebFrame(null, null, state, null, targetIndex)
     }
 
+    @Suppress("SameParameterValue")
     private fun addNewWebFrame(
             url: String?,
             msg: Message?,
@@ -258,7 +259,7 @@ class WebViewWindowRootView(
                 windowLayoutParams.width = displaySize.shortLine
                 windowLayoutParams.height = (displaySize.longLine * SCREEN_LONG_LINE_CLEARANCE).toInt()
 
-                windowLayoutParams.y = (displaySize.longLine - windowLayoutParams.height) / 2
+                windowLayoutParams.y = statusBarSize
             }
 
             Orientation.LANDSCAPE -> {
@@ -345,15 +346,15 @@ class WebViewWindowRootView(
     fun toggleShowHide(): Boolean {
         var isStateChanged = true
 
-        when {
-            windowLayoutParams.x == WINDOW_HIDDEN_POS_X -> {
+        when (windowLayoutParams.x) {
+            WINDOW_HIDDEN_POS_X -> {
                 // Hidden -> Closed.
                 windowLayoutParams.x = closedWindowLayout.x
 
                 webFrames.forEach(WebFrame::onResume)
             }
 
-            windowLayoutParams.x == closedWindowLayout.x -> {
+            closedWindowLayout.x -> {
                 // Closed -> Hidden.
                 windowLayoutParams.x = WINDOW_HIDDEN_POS_X
 
