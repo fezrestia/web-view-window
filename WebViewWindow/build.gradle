@@ -8,11 +8,11 @@ def outDir = project.buildDir
 
 android {
     compileSdkVersion 29
-    buildToolsVersion '28.0.3'
+    buildToolsVersion '30.0.0'
 
     defaultConfig {
         applicationId "com.fezrestia.android.webviewwindow"
-        minSdkVersion 26
+        minSdkVersion 27
         targetSdkVersion 29
     }
 
