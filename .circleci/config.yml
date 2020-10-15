@@ -1,26 +1,42 @@
 version: 2.1
 
-orbs:
- android: circleci/android@0.2.1
-
 jobs:
-  build:
-    executor: android/android
-        
-    steps:
-      - checkout
+    build:
+        docker:
+            - image: circleci/android:api-30-ndk
 
-      - run:
-          name: Run Test
-          command: ./gradlew test
+        steps:
+            - checkout
 
-      - run:
-          name: Run Lint
-          command: ./gradlew :WebViewWindow:lint
+            - run:
+                name: Run Build
+                command: ./gradlew build
 
-      - store_artifacts:
-          path: WebViewWindow/build/reports
-          destination: reports
+    test:
+        docker:
+            - image: circleci/android:api-30-ndk
 
-      - store_test_results:
-          path: WebViewWindow/build/reports
+        steps:
+            - checkout
+
+            - run:
+                name: Run Test
+                command: ./gradlew test
+
+            - run:
+                name: Run Lint
+                command: ./gradlew lint
+
+            - store_artifacts:
+                path: build/reports
+
+            - store_test_results:
+                path: build/reports
+
+workflows:
+    build_and_test:
+        jobs:
+            - build
+            - test:
+                requires:
+                    - build
