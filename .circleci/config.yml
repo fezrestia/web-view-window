@@ -1,0 +1,26 @@
+version: 2.1
+
+orbs:
+ android: circleci/android@0.2.1
+
+jobs:
+  build:
+    executor: android/android
+        
+    steps:
+      - checkout
+
+      - run:
+          name: Run Test
+          command: ./gradlew test
+
+      - run:
+          name: Run Lint
+          command: ./gradlew :WebViewWindow:lint
+
+      - store_artifacts:
+          path: WebViewWindow/build/reports
+          destination: reports
+
+      - store_test_results:
+          path: WebViewWindow/build/reports
