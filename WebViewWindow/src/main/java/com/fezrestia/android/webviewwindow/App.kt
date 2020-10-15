@@ -5,6 +5,7 @@ package com.fezrestia.android.webviewwindow
 import android.app.Application
 import android.content.SharedPreferences
 import android.os.Handler
+import android.os.Looper
 import androidx.preference.PreferenceManager
 
 import com.fezrestia.android.util.Log
@@ -24,7 +25,7 @@ class App : Application() {
         }
 
         // UI thread handler.
-        ui = Handler()
+        ui = Handler(Looper.getMainLooper())
 
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onCreate() : X")
     }

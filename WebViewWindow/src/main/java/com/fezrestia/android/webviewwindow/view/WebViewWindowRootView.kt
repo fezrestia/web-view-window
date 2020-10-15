@@ -229,11 +229,9 @@ class WebViewWindowRootView(
 
     private fun updateDisplayConfig() {
         // Get display size.
-        val display = windowManager.defaultDisplay
-        val size = Point()
-        display.getSize(size)
+        val rect = windowManager.currentWindowMetrics.bounds
 
-        displaySize = LayoutRect(0, 0, size.x, size.y)
+        displaySize = LayoutRect(0, 0, rect.width(), rect.height())
         if (Log.IS_DEBUG) Log.logDebug(TAG, "updateDisplayConfig() : $displaySize")
 
         // Get display displayOrientation.

@@ -123,12 +123,8 @@ class ExtendedWebView(
         // Access permission.
         webSettings.allowContentAccess = true
         webSettings.allowFileAccess = true
-        webSettings.allowFileAccessFromFileURLs = true
-        webSettings.allowUniversalAccessFromFileURLs = true
         // Enable cache.
-        webSettings.setAppCacheEnabled(true)
         webSettings.cacheMode = WebSettings.LOAD_DEFAULT
-        webSettings.setAppCachePath(context.cacheDir.absolutePath)
         // Enable resource load.
         webSettings.blockNetworkImage = false
         webSettings.blockNetworkLoads = false
@@ -185,7 +181,6 @@ class ExtendedWebView(
         clearCache(true)
         clearHistory()
 
-        setWebViewClient(null)
         setWebChromeClient(null)
         removeJavascriptInterface(INJECTED_JAVA_SCRIPT_NATIVE_INTERFACE_OBJECT_NAME)
 

@@ -332,9 +332,11 @@ class WebFrame(
             popup.setOnDismissListener(OnDismissListenerImpl())
 
             // Remove domain specific menu.
-            if (getYoutubeVideoId(getCurrentUrl()) == null) {
-                // This URL can NOT be converted to embed youtube URL.
-                popup.menu.removeItem(R.id.popup_menu_youtube_endless_loop)
+            getCurrentUrl()?.let {
+                if (getYoutubeVideoId(it) == null) {
+                    // This URL can NOT be converted to embed youtube URL.
+                    popup.menu.removeItem(R.id.popup_menu_youtube_endless_loop)
+                }
             }
 
             popup.show()
@@ -359,13 +361,17 @@ class WebFrame(
                     }
                     R.id.popup_menu_open_on_chrome_custom_tab -> {
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "## Popup : Open on Chrome Custom Tab")
-                        callback?.onStartChromeCustomTabRequired(web_view.url)
+                        web_view.url?.let {
+                            callback?.onStartChromeCustomTabRequired(it)
+                        }
                     }
                     R.id.popup_menu_youtube_endless_loop -> {
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "## Popup : Youtube:EndlessLoop")
-                        val videoId = getYoutubeVideoId(getCurrentUrl())
-                        if (videoId != null) {
-                            loadYoutubeEndlessLoop(videoId)
+                        getCurrentUrl()?.let {
+                            val videoId = getYoutubeVideoId(it)
+                            if (videoId != null) {
+                                loadYoutubeEndlessLoop(videoId)
+                            }
                         }
                     }
                 }
@@ -487,7 +493,7 @@ class WebFrame(
     fun onPause() { web_view.onPause() }
     fun canGoBack(): Boolean { return web_view.canGoBack() }
     fun goBack() { web_view.goBack() }
-    fun getCurrentUrl(): String { return web_view.url }
+    fun getCurrentUrl(): String? { return web_view.url }
 
     /**
      * Get current WebView state as Bundle.
