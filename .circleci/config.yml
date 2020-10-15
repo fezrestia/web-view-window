@@ -10,7 +10,7 @@ jobs:
 
             - run:
                 name: Run Build
-                command: ./gradlew build
+                command: ./gradlew assemble
 
     test:
         docker:

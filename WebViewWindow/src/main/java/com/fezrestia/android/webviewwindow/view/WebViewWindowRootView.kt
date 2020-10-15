@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.graphics.Point
+import android.os.Build
 import android.os.Bundle
 import android.os.Message
 import android.util.AttributeSet
@@ -229,9 +230,16 @@ class WebViewWindowRootView(
 
     private fun updateDisplayConfig() {
         // Get display size.
-        val rect = windowManager.currentWindowMetrics.bounds
+        displaySize = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            val size = Point()
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getSize(size)
+            LayoutRect(0, 0, size.x, size.y)
+        } else {
+            val rect = windowManager.currentWindowMetrics.bounds
+            LayoutRect(0, 0, rect.width(), rect.height())
+        }
 
-        displaySize = LayoutRect(0, 0, rect.width(), rect.height())
         if (Log.IS_DEBUG) Log.logDebug(TAG, "updateDisplayConfig() : $displaySize")
 
         // Get display displayOrientation.
