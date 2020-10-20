@@ -19,6 +19,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
+import androidx.core.content.res.ResourcesCompat
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.BuildConfig
 import com.fezrestia.android.webviewwindow.R
@@ -37,8 +38,14 @@ class WebFrame(
     private val TOUCH_SLOP: Int = ViewConfiguration.get(context).scaledTouchSlop
     private val SLIDER_GRIP_HEIGHT_PIX = resources.getDimensionPixelSize(R.dimen.grip_height)
 
-    private val DRAWABLE_SLIDER_GRIP_SELECTED = resources.getDrawable(R.drawable.slider_grip_selected, null)
-    private val DRAWABLE_SLIDER_GRIP = resources.getDrawable(R.drawable.slider_grip, null)
+    private val DRAWABLE_SLIDER_GRIP_SELECTED = ResourcesCompat.getDrawable(
+            resources,
+            R.drawable.slider_grip_selected,
+            null)
+    private val DRAWABLE_SLIDER_GRIP = ResourcesCompat.getDrawable(
+            resources,
+            R.drawable.slider_grip,
+            null)
 
     private var callback: Callback? = null
     private lateinit var webFrameContainerView: View
