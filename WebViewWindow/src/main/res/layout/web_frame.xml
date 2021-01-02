@@ -178,8 +178,8 @@
     >
         <ImageView
                 android:id="@+id/slider_grip"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="@dimen/grip_width"
+                android:layout_height="@dimen/grip_height"
                 android:layout_gravity="left|top"
                 android:contentDescription="@string/app_name"
         />
