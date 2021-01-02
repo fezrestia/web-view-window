@@ -295,7 +295,7 @@ class WebViewWindowRootView(
         closedWindowLayout.x = -1 * (windowLayoutParams.width - SLIDER_GRIP_WIDTH_PIX)
         closedWindowLayout.y = windowLayoutParams.y
         closedWindowLayout.width = windowLayoutParams.width
-        closedWindowLayout.height = SLIDER_GRIP_HEIGHT_PIX + (SLIDER_GRIP_HEIGHT_PIX / 2) + (RIGHT_BOTTOM_ICON_SIZE_PIX * 2)
+        closedWindowLayout.height = SLIDER_GRIP_HEIGHT_PIX * 2 + RIGHT_BOTTOM_ICON_SIZE_PIX * 2
     }
 
     private fun updateLayoutParams() {
