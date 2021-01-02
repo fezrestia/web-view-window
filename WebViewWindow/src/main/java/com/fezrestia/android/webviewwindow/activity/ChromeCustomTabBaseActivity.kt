@@ -32,7 +32,7 @@ class ChromeCustomTabBaseActivity : Activity() {
             // 1st time.
 
             val builder = CustomTabsIntent.Builder()
-            builder.enableUrlBarHiding()
+            builder.setUrlBarHidingEnabled(true)
             builder.setStartAnimations(
                     this,
                     R.anim.slide_in_from_right,
