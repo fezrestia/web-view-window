@@ -176,7 +176,7 @@
         android:layout_height="wrap_content"
         tools:ignore="RtlHardcoded"
     >
-        <ImageView
+        <com.fezrestia.android.webviewwindow.view.BlockNavigationImageView
                 android:id="@+id/slider_grip"
                 android:layout_width="@dimen/grip_width"
                 android:layout_height="@dimen/grip_height"
