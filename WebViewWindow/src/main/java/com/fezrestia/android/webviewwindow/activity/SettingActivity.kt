@@ -78,7 +78,7 @@ class SettingActivity : AppCompatActivity() {
                     }
 
                     Constants.SP_KEY_BASE_LOAD_URL -> {
-                        val url: String? = newValue as String
+                        val url = newValue as String?
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "BaseLoadURL = $url")
 
                         val summary = if (url != null) {
@@ -158,20 +158,24 @@ class SettingActivity : AppCompatActivity() {
         @TargetApi(Build.VERSION_CODES.M)
         get() = Settings.canDrawOverlays(this)
 
-    private val isWriteStoragePermissionGranted: Boolean
-        @TargetApi(Build.VERSION_CODES.M)
-        get() = (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED)
+    private val REQUIRED_PERMISSIONS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        arrayOf(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+        )
+    } else {
+        arrayOf(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+        )
+    }
 
-    private val isAccessCoarseLocationPermissionGranted: Boolean
-        @TargetApi(Build.VERSION_CODES.M)
-        get() = (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED)
-
-    private val isAccessFineLocationPermissionGranted: Boolean
-        @TargetApi(Build.VERSION_CODES.M)
-        get() = (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED)
+    @TargetApi(Build.VERSION_CODES.M)
+    private fun isPermissionGranted(permission: String): Boolean =
+            checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
 
     /**
      * Check permission.
@@ -195,14 +199,10 @@ class SettingActivity : AppCompatActivity() {
 
             val permissions = mutableListOf<String>()
 
-            if (!isWriteStoragePermissionGranted) {
-                permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            }
-            if (!isAccessCoarseLocationPermissionGranted) {
-                permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
-            }
-            if (!isAccessFineLocationPermissionGranted) {
-                permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+            REQUIRED_PERMISSIONS.forEach { permission ->
+                if(!isPermissionGranted(permission)) {
+                    permissions.add(permission)
+                }
             }
 
             return if (permissions.isNotEmpty()) {
@@ -238,17 +238,11 @@ class SettingActivity : AppCompatActivity() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onRequestPermissionsResult()")
 
         if (requestCode == REQUEST_CODE_MANAGE_PERMISSIONS) {
-            if (!isWriteStoragePermissionGranted) {
-                Log.logError(TAG,"Write storage permission is not granted yet.")
-                finish()
-            }
-            if (!isAccessCoarseLocationPermissionGranted) {
-                Log.logError(TAG,"Access coarse location permission is not granted yet.")
-                finish()
-            }
-            if (!isAccessFineLocationPermissionGranted) {
-                Log.logError(TAG,"Access fine location permission is not granted yet.")
-                finish()
+            REQUIRED_PERMISSIONS.forEach { permission ->
+                if (!isPermissionGranted(permission)) {
+                    Log.logError(TAG, "Permission: $permission is NOT granted yet.")
+                    finish()
+                }
             }
         }
     }
