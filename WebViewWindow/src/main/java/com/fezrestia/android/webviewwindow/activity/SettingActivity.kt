@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.preference.Preference
@@ -25,8 +26,7 @@ import com.fezrestia.android.webviewwindow.receiver.WebViewWindowReceiver
 class SettingActivity : AppCompatActivity() {
     private val TAG = "SettingActivity"
 
-    private val REQUEST_CODE_MANAGE_OVERLAY_PERMISSION = 100
-    private val REQUEST_CODE_MANAGE_PERMISSIONS = 200
+    private val REQUEST_CODE_MANAGE_PERMISSIONS = 100
 
     /**
      * Fragment for Settings.
@@ -69,12 +69,12 @@ class SettingActivity : AppCompatActivity() {
                     Constants.SP_KEY_WWW_ENABLE_DISABLE -> {
                         val context = requireContext()
 
-                        val endisToggleIntent = Intent(
+                        val toggleIntent = Intent(
                                 context.applicationContext,
                                 WebViewWindowReceiver::class.java)
-                        endisToggleIntent.action = Constants.INTENT_ACTION_TOGGLE_ENABLE_DISABLE
+                        toggleIntent.action = Constants.INTENT_ACTION_TOGGLE_ENABLE_DISABLE
 
-                        context.sendBroadcast(endisToggleIntent)
+                        context.sendBroadcast(toggleIntent)
                     }
 
                     Constants.SP_KEY_BASE_LOAD_URL -> {
@@ -121,11 +121,7 @@ class SettingActivity : AppCompatActivity() {
                 .commit()
     }
 
-    override fun onResume() {
-        if (Log.IS_DEBUG) Log.logDebug(TAG, "onResume()")
-        super.onResume()
-
-        // Mandatory permission check.
+    private fun checkPermissions() {
         if (isFinishing) {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "App is in finishing sequence.")
             return
@@ -134,12 +130,31 @@ class SettingActivity : AppCompatActivity() {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "Return immediately for permission.")
             return
         }
+    }
 
+    override fun onStart() {
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "onStart()")
+        super.onStart()
+
+        checkPermissions()
+    }
+
+    override fun onResume() {
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "onResume()")
+        super.onResume()
+
+        checkPermissions()
     }
 
     override fun onPause() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onPause()")
         super.onPause()
+        // NOP.
+    }
+
+    override fun onStop() {
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "onStop()")
+        super.onStop()
         // NOP.
     }
 
@@ -192,7 +207,16 @@ class SettingActivity : AppCompatActivity() {
                 val intent = Intent(
                         Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:$packageName"))
-                startActivityForResult(intent, REQUEST_CODE_MANAGE_OVERLAY_PERMISSION)
+
+                val startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+                    REQUIRED_PERMISSIONS.forEach { permission ->
+                        if (!isPermissionGranted(permission)) {
+                            Log.logError(TAG, "Permission: $permission is NOT granted yet.")
+                            finish()
+                        }
+                    }
+                }
+                startForResult.launch(intent)
 
                 return true
             }
@@ -203,6 +227,12 @@ class SettingActivity : AppCompatActivity() {
                 if(!isPermissionGranted(permission)) {
                     permissions.add(permission)
                 }
+            }
+
+            // Check background permission will be granted after foreground.
+            if (permissions.contains(Manifest.permission.ACCESS_COARSE_LOCATION)
+                    || permissions.contains(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                permissions.remove(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
             }
 
             return if (permissions.isNotEmpty()) {
@@ -216,34 +246,6 @@ class SettingActivity : AppCompatActivity() {
             }
         } else {
             return false
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        if (Log.IS_DEBUG) Log.logDebug(TAG, "onActivityResult()")
-        super.onActivityResult(requestCode, resultCode, intent)
-
-        if (requestCode == REQUEST_CODE_MANAGE_OVERLAY_PERMISSION) {
-            if (!isSystemAlertWindowPermissionGranted) {
-                Log.logError(TAG, "Overlay permission is not granted yet.")
-                finish()
-            }
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-            requestCode: Int,
-            permissions: Array<String>,
-            grantResults: IntArray) {
-        if (Log.IS_DEBUG) Log.logDebug(TAG, "onRequestPermissionsResult()")
-
-        if (requestCode == REQUEST_CODE_MANAGE_PERMISSIONS) {
-            REQUIRED_PERMISSIONS.forEach { permission ->
-                if (!isPermissionGranted(permission)) {
-                    Log.logError(TAG, "Permission: $permission is NOT granted yet.")
-                    finish()
-                }
-            }
         }
     }
 }

@@ -9,7 +9,11 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.hardware.display.DisplayManager
+import android.os.Build
 import android.os.IBinder
+import android.view.Display
+import android.view.WindowManager
 
 import com.fezrestia.android.webviewwindow.Constants
 import com.fezrestia.android.webviewwindow.R
@@ -55,6 +59,21 @@ class WebViewWindowService : Service() {
                 .build()
     }
 
+    private fun getWindowContext(): Context {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val dm = this.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+            val display: Display = dm.getDisplay(Display.DEFAULT_DISPLAY)
+            val displayCtx: Context = this.createDisplayContext(display)
+            val windowCtx: Context = displayCtx.createWindowContext(
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                null)
+            windowCtx
+        } else {
+            // Use service as context.
+            this
+        }
+    }
+
     override fun onCreate() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onCreate() : E")
         super.onCreate()
@@ -65,10 +84,12 @@ class WebViewWindowService : Service() {
                 ONGOING_NOTIFICATION_ID,
                 getForegroundServiceNotification())
 
-        view = WebViewWindowRootView.inflate(this)
+        val windowContext = getWindowContext()
+
+        view = WebViewWindowRootView.inflate(windowContext)
         view.initialize(ViewCallback())
 
-        controller = WebViewWindowController(this)
+        controller = WebViewWindowController(windowContext)
 
         App.isEnabled = true
 

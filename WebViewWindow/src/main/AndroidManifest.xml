@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.fezrestia.android.webviewwindow"
 
-    android:versionCode="735"
-    android:versionName="2.2.2-735"
+    android:versionCode="748"
+    android:versionName="2.2.3-748"
 >
 <!--                     | | | |-> incremental build count
                          | | |-> patch
