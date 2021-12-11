@@ -20,10 +20,8 @@ class BlockNavigationImageView(
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            navExclusionRect.set(left, top, right, bottom)
-            val list = listOf<Rect>(navExclusionRect)
-            this.systemGestureExclusionRects = list
-        }
+        navExclusionRect.set(left, top, right, bottom)
+        val list = listOf(navExclusionRect)
+        this.systemGestureExclusionRects = list
     }
 }

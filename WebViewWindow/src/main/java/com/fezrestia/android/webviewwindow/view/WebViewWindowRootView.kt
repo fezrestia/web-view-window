@@ -469,9 +469,7 @@ class WebViewWindowRootView(
         override fun onSlideWindowStopped(startedRawPos: Point, diffPos: Point, stoppedRawPos: Point) {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "onSlideWindowStopped()")
 
-            val targetLayout: LayoutRect
-
-            targetLayout = if (0 < diffPos.x) { // Open direction.
+            val targetLayout: LayoutRect = if (0 < diffPos.x) { // Open direction.
                 val openThreshold = displaySize.width / 3
                 if (openThreshold < stoppedRawPos.x) { // Do open.
                     openedWindowLayout
