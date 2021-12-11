@@ -71,6 +71,7 @@ class WebViewWindowRootView(
     interface Callback {
         fun onNewWebFrameRequired()
         fun onFullBrowserRequired(url: String)
+        fun onSaveStateRequired()
     }
     private var callback: Callback? = null
 
@@ -520,6 +521,12 @@ class WebViewWindowRootView(
             callback?.onFullBrowserRequired(url)
 
             startSlideOutWindow()
+        }
+
+        override fun onUrlChanged(url: String) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onUrlChanged() : url=$url")
+
+            callback?.onSaveStateRequired()
         }
     }
 

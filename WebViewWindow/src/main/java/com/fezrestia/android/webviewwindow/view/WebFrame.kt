@@ -69,6 +69,8 @@ class WebFrame(
 
         fun onCloseRequired(frameOrder: Int)
         fun onStartChromeCustomTabRequired(url: String)
+
+        fun onUrlChanged(url: String)
     }
 
     private inner class ExtendedWebViewCallbackImpl : ExtendedWebView.Callback {
@@ -83,6 +85,8 @@ class WebFrame(
         override fun onNewUrlLoading(url: String) {
             val visible = if (url.startsWith("http://")) View.VISIBLE else View.INVISIBLE
             http_indicator.visibility = visible
+
+            callback?.onUrlChanged(url)
         }
     }
 

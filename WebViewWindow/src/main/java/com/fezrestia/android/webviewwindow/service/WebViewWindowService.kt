@@ -125,6 +125,13 @@ class WebViewWindowService : Service() {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "onFullBrowserRequired() : url=$url")
             controller.startChromeCustomTab(url)
         }
+
+        override fun onSaveStateRequired() {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onSaveStateRequired()")
+
+            val states = view.getWebViewStates()
+            controller.saveWebViewStates(states)
+        }
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -153,9 +160,6 @@ class WebViewWindowService : Service() {
                 }
 
                 Constants.INTENT_ACTION_STOP_OVERLAY_WINDOW -> {
-                    val states = view.getWebViewStates()
-                    controller.saveWebViewStates(states)
-
                     view.removeFromOverlayWindow()
 
                     controller.stop()
