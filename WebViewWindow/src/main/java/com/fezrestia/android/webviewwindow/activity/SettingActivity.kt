@@ -64,8 +64,8 @@ class SettingActivity : AppCompatActivity() {
         }
 
         private inner class OnChangeListenerImpl : Preference.OnPreferenceChangeListener {
-            override fun onPreferenceChange(preference: Preference?, newValue: Any?): Boolean {
-                when (preference?.key) {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                when (preference.key) {
                     Constants.SP_KEY_WWW_ENABLE_DISABLE -> {
                         val context = requireContext()
 
@@ -94,7 +94,7 @@ class SettingActivity : AppCompatActivity() {
                     }
 
                     else -> {
-                        throw RuntimeException("UnSupported Preference : key=${preference?.key}")
+                        throw RuntimeException("UnSupported Preference : key=${preference.key}")
                     }
                 }
 
@@ -173,20 +173,13 @@ class SettingActivity : AppCompatActivity() {
         @TargetApi(Build.VERSION_CODES.M)
         get() = Settings.canDrawOverlays(this)
 
-    private val REQUIRED_PERMISSIONS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+    private val REQUIRED_PERMISSIONS =
         arrayOf(
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION,
         )
-    } else {
-        arrayOf(
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-        )
-    }
 
     @TargetApi(Build.VERSION_CODES.M)
     private fun isPermissionGranted(permission: String): Boolean =

@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.fezrestia.android.webviewwindow"
 
-    android:versionCode="779"
-    android:versionName="2.4.1-779"
+    android:versionCode="795"
+    android:versionName="2.4.2-795"
 >
 <!--                     | | | |-> incremental build count
                          | | |-> patch
@@ -31,13 +31,11 @@
         android:label="@string/app_name"
         android:hardwareAccelerated="true"
         android:allowBackup="true"
-        android:fullBackupContent="true"
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning"
     >
         <activity
             android:name="com.fezrestia.android.webviewwindow.activity.SettingActivity"
-            android:label="@string/app_name"
             android:theme="@style/Theme.AppCompat"
             android:launchMode="singleTask"
             android:taskAffinity="webviewwindow.setting"
@@ -52,7 +50,6 @@
 
         <activity
             android:name="com.fezrestia.android.webviewwindow.activity.ChromeCustomTabBaseActivity"
-            android:label="@string/app_name"
             android:theme="@style/TranslucentTheme"
             android:launchMode="standard"
             android:taskAffinity="webviewwindow.chrome_custom_tab_base"
