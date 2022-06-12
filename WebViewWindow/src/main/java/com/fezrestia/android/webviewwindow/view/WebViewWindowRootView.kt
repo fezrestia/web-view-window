@@ -351,10 +351,10 @@ class WebViewWindowRootView(
      * @return Boolean Show/Hide state is changed or not.
      */
     fun toggleShowHide(): Boolean {
-        var isStateChanged = true
-
         when (windowLayoutParams.x) {
             WINDOW_HIDDEN_POS_X -> {
+                windowStateConvergentTask?.forceFinish()
+
                 // Hidden -> Closed.
                 windowLayoutParams.x = closedWindowLayout.x
 
@@ -362,6 +362,8 @@ class WebViewWindowRootView(
             }
 
             closedWindowLayout.x -> {
+                windowStateConvergentTask?.forceFinish()
+
                 // Closed -> Hidden.
                 windowLayoutParams.x = WINDOW_HIDDEN_POS_X
 
@@ -370,13 +372,13 @@ class WebViewWindowRootView(
 
             else -> {
                 // NOP. Maybe now on Opened.
-                isStateChanged = false
+                return false
             }
         }
 
         windowManager.updateViewLayout(this, windowLayoutParams)
 
-        return isStateChanged
+        return true
     }
 
     /**
@@ -769,6 +771,52 @@ class WebViewWindowRootView(
             App.ui.postDelayed(this, WINDOW_ANIMATION_INTERVAL_MILLIS.toLong())
 
             if (Log.IS_DEBUG) Log.logDebug(TAG, "run() : X")
+        }
+
+        fun forceFinish() {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "forceFinish() : E")
+
+            // Stop window animation immediately.
+            App.ui.removeCallbacks(this)
+
+            // Fix position.
+            windowLayoutParams.x = targetWindowLayout.x
+            windowLayoutParams.y = targetWindowLayout.y
+            windowLayoutParams.width = targetWindowLayout.width
+            windowLayoutParams.height = targetWindowLayout.height
+
+            // Expand/Collapse animation.
+            val layoutParams = web_frame_container.layoutParams
+
+            when (targetWindowLayout.height) {
+                // Expand direction.
+                openedWindowLayout.height -> {
+                    // Web view stack layout.
+                    layoutParams.height = openedWindowLayout.height
+                    web_frame_container.layoutParams = layoutParams
+
+                    resizer_grip.visibility = VISIBLE
+                    add_new_web_frame_button.visibility = VISIBLE
+                }
+
+                // Collapse direction.
+                closedWindowLayout.height -> {
+                    // Web view stack layout.
+                    layoutParams.height = closedWindowLayout.height
+                    web_frame_container.layoutParams = layoutParams
+
+                    // Disable right-bottom icons.
+                    resizer_grip.visibility = INVISIBLE
+                    add_new_web_frame_button.visibility = INVISIBLE
+                }
+            }
+
+            // Fix window size.
+            windowManager.updateViewLayout(
+                    this@WebViewWindowRootView,
+                    windowLayoutParams)
+
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "forceFinish() : X")
         }
     }
 
