@@ -14,3 +14,6 @@ build/
 # Local environment related
 local.properties
 
+# Firebase.
+webviewwindow/src/debug/google-services.json
+webviewwindow/src/release/google-services.json
