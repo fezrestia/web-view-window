@@ -19,4 +19,15 @@
             app:useSimpleSummaryProvider="true"
         />
     </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        app:title="DEBUG"
+    >
+        <androidx.preference.SwitchPreference
+            app:key="sp-key-debug-force-crash"
+            app:title="Force Crash"
+            app:persistent="false"
+            app:defaultValue="false"
+        />
+    </androidx.preference.PreferenceCategory>
 </androidx.preference.PreferenceScreen>

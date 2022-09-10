@@ -3,7 +3,6 @@
 package com.fezrestia.android.webviewwindow.activity
 
 import android.Manifest
-import android.annotation.TargetApi
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -53,6 +52,10 @@ class SettingActivity : AppCompatActivity() {
             val enDisPref: SwitchPreference = findPreference(Constants.SP_KEY_WWW_ENABLE_DISABLE)!!
             enDisPref.isChecked = App.isEnabled
             enDisPref.onPreferenceChangeListener = onChangeListenerImpl
+
+            // DEBUG force crash.
+            val forceCrash: SwitchPreference = findPreference(Constants.SP_KEY_DEBUG_FORCE_CRASH)!!
+            forceCrash.onPreferenceChangeListener = onChangeListenerImpl
         }
 
         override fun onStop() {
@@ -91,6 +94,12 @@ class SettingActivity : AppCompatActivity() {
                             "URL is reset to DEFAULT."
                         }
                         preference.summary = summary
+                    }
+
+                    // DEBUG.
+
+                    Constants.SP_KEY_DEBUG_FORCE_CRASH -> {
+                        throw RuntimeException("Force Crash Triggered !")
                     }
 
                     else -> {
@@ -170,7 +179,6 @@ class SettingActivity : AppCompatActivity() {
         get() = Build.VERSION_CODES.M <= Build.VERSION.SDK_INT
 
     private val isSystemAlertWindowPermissionGranted: Boolean
-        @TargetApi(Build.VERSION_CODES.M)
         get() = Settings.canDrawOverlays(this)
 
     private val REQUIRED_PERMISSIONS =
@@ -181,7 +189,6 @@ class SettingActivity : AppCompatActivity() {
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION,
         )
 
-    @TargetApi(Build.VERSION_CODES.M)
     private fun isPermissionGranted(permission: String): Boolean =
             checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
 
@@ -190,7 +197,6 @@ class SettingActivity : AppCompatActivity() {
 
      * @return immediateReturnRequired
      */
-    @TargetApi(Build.VERSION_CODES.M)
     private fun checkMandatoryPermissions(): Boolean {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "checkMandatoryPermissions()")
 

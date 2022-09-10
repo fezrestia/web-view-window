@@ -19,6 +19,9 @@ object Constants {
     /** SP Key, WebView states on overlay window closed. */
     const val SP_KEY_LAST_WEB_VIEW_STATES_JSON = "sp-key-last-web-view-state-json"
 
+    /** SP key, DEBUG, force crash. */
+    const val SP_KEY_DEBUG_FORCE_CRASH = "sp-key-debug-force-crash"
+
     /** Default load URL.  */
     const val DEFAULT_BASE_LOAD_URL = "https://www.google.com"
 
