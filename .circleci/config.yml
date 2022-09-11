@@ -16,8 +16,8 @@ jobs:
                     echo $GOOGLE_SERVICES_JSON >> WebViewWindow/src/debug/google-services.json
 
             - run:
-                name: Run Build
-                command: ./gradlew assemble
+                name: Run Debug Build
+                command: ./gradlew assembleDebug
 
     test:
         docker:
