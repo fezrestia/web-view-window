@@ -1,13 +1,18 @@
 version: 2.1
 
 jobs:
-    build:
+    sync:
         docker:
             - image: circleci/android:api-30-ndk
 
         steps:
             - checkout
 
+    build:
+        docker:
+            - image: circleci/android:api-30-ndk
+
+        steps:
             - run:
                 name: Restore google-services.json
                 command: |
@@ -24,8 +29,6 @@ jobs:
             - image: circleci/android:api-30-ndk
 
         steps:
-            - checkout
-
             - run:
                 name: Run Test
                 command: ./gradlew test
@@ -41,9 +44,12 @@ jobs:
                 path: build/reports
 
 workflows:
-    build_and_test:
+    sync_build_test:
         jobs:
-            - build
+            - sync
+            - build:
+                requires:
+                    - sync
             - test:
                 requires:
                     - build
