@@ -10,7 +10,7 @@ jobs:
 
             - run:
                 name: Restore google-services.json
-                command: echo $GOOGLE_SERVICES_JSON > ${HOME}/WebViewWindow/src/debug/google-services.json
+                command: echo $GOOGLE_SERVICES_JSON > WebViewWindow/src/debug/google-services.json
 
             - run:
                 name: Run Build
