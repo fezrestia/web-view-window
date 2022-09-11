@@ -1,41 +1,54 @@
 version: 2.1
 
+defaults: &defaults
+    working_directory: /tmp/workspace
+    docker:
+          - image: circleci/android:api-30-ndk
+
 jobs:
     sync:
-        docker:
-            - image: circleci/android:api-30-ndk
+        <<: *defaults
 
         steps:
             - checkout
 
+            - run:
+                  name: Restore google-services.json
+                  command: |
+                      mkdir WebViewWindow/src/debug
+                      touch WebViewWindow/src/debug/google-services.json
+                      echo $GOOGLE_SERVICES_JSON >> WebViewWindow/src/debug/google-services.json
+
+            - persist_to_workspace:
+                root: /tmp/workspace
+                paths:
+                    - .
+
     build:
-        docker:
-            - image: circleci/android:api-30-ndk
+        <<: *defaults
 
         steps:
-            - run:
-                name: Restore google-services.json
-                command: |
-                    mkdir WebViewWindow/src/debug
-                    touch WebViewWindow/src/debug/google-services.json
-                    echo $GOOGLE_SERVICES_JSON >> WebViewWindow/src/debug/google-services.json
+            - attach_workspace:
+                at: /tmp/workspace
 
             - run:
                 name: Run Debug Build
                 command: ./gradlew assembleDebug
 
     test:
-        docker:
-            - image: circleci/android:api-30-ndk
+        <<: *defaults
 
         steps:
+            - attach_workspace:
+                at: /tmp/workspace
+
             - run:
                 name: Run Test
-                command: ./gradlew test
+                command: ./gradlew testDebug
 
             - run:
                 name: Run Lint
-                command: ./gradlew lint
+                command: ./gradlew lintDebug
 
             - store_artifacts:
                 path: build/reports
