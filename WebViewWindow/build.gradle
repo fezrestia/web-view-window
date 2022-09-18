@@ -88,6 +88,7 @@ android {
         xmlOutput file("$outDir/reports/test-results-lint.xml")
     }
     ndkVersion '25.1.8937393'
+    namespace 'com.fezrestia.android.webviewwindow'
 
 }
 

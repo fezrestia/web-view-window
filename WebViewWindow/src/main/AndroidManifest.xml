@@ -2,10 +2,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
 
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.fezrestia.android.webviewwindow"
 
-    android:versionCode="832"
-    android:versionName="2.4.6-832"
+    android:versionCode="837"
+    android:versionName="2.4.7-837"
 >
 <!--                     | | | |-> incremental build count
                          | | |-> patch
