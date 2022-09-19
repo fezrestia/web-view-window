@@ -30,4 +30,28 @@ object Constants {
 
     /** WebView state key. */
     const val WEB_VIEW_STATE_BUNDLE_KEY = "WEBVIEW_CHROMIUM_STATE"
+
+    /** Firebase analytics event. */
+    object FirebaseEvent {
+        object LowMemState {
+            const val EVENT = "Low_Mem_State"
+
+            object Params {
+                object Key {
+                    const val ON_TRIM_MEMORY = "ON_TRIM_MEMORY"
+                }
+
+                object Value {
+                    const val RUNNING_MODERATE = "RUNNING_MODERATE"
+                    const val RUNNING_LOW = "RUNNING_LOW"
+                    const val RUNNING_CRITICAL = "CRITICAL"
+                    const val UI_HIDDEN = "UI_HIDDEN"
+                    const val BACKGROUND = "BACKGROUND"
+                    const val MODERATE = "MODERATE"
+                    const val COMPLETE = "COMPLETE"
+                    const val ELSE = "ELSE"
+                }
+            }
+        }
+    }
 }
