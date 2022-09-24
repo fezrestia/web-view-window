@@ -15,6 +15,7 @@ import android.webkit.*
 
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.App
+import com.fezrestia.android.webviewwindow.FirebaseAnalyticsInterface
 
 import java.io.BufferedReader
 import java.io.IOException
@@ -103,9 +104,8 @@ class ExtendedWebView(
         backHandlerThread.start()
         backHandler = Handler(backHandlerThread.looper)
 
-        // Set rendering process priority to be targeted by LMK if not visible.
-        // TODO: Enable this with onRenderProcessGone() implementation.
-//        setRendererPriorityPolicy(RENDERER_PRIORITY_BOUND, true)
+        // Set LMK target level.
+        setRendererPriorityPolicy(RENDERER_PRIORITY_BOUND, true)
 
         // Web callback.
         setWebViewClient(webViewClient)
@@ -319,17 +319,15 @@ class ExtendedWebView(
         override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "onRenderProcessGone()")
 
-            if (!detail.didCrash()) {
-                if (Log.IS_DEBUG) Log.logDebug(TAG, "## WebView Rendering Process is killed by LMK.")
-
-                // TODO: Handle WebView close.
-
-            } else {
-                if (Log.IS_DEBUG) Log.logDebug(TAG, "## WebView Rendering Process is crashed.")
-
-                // TODO: Handle crash.
-
+            if (Log.IS_DEBUG) {
+                if (detail.didCrash()) {
+                    Log.logDebug(TAG, "## WebView Rendering Process is crashed.")
+                } else {
+                    Log.logDebug(TAG, "## WebView Rendering Process is killed by LMK.")
+                }
             }
+
+            FirebaseAnalyticsInterface.logOnRenderProcessGone(detail)
 
             return true // Continue to run App.
         }

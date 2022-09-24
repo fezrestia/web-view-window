@@ -53,5 +53,23 @@ object Constants {
                 }
             }
         }
+
+        object RenderProcessState {
+            const val EVENT = "Render_Process_State"
+
+            object Params {
+                object Key {
+                    const val ON_RENDER_PROCESS_GONE = "ON_RENDER_PROCESS_GONE"
+                }
+
+                object Value {
+                    const val CRASH = "CRASH"
+                    const val LMK_ON_PRIORITY_WAIVED    = "LMK_ON_PRIORITY_WAIVED"
+                    const val LMK_ON_PRIORITY_BOUND     = "LMK_ON_PRIORITY_BOUND"
+                    const val LMK_ON_PRIORITY_IMPORTANT = "LMK_ON_PRIORITY_IMPORTANT"
+                    const val ELSE = "ELSE"
+                }
+            }
+        }
     }
 }
