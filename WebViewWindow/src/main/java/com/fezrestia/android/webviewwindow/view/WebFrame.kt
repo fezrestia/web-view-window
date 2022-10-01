@@ -310,6 +310,10 @@ class WebFrame(
                         if (abs(diffX(curX)) < TOUCH_SLOP && abs(diffY(curY)) < TOUCH_SLOP) {
                             performClick()
                             callback?.onTabClicked(frameOrder)
+
+                            if (web_view.isReloadRequired) {
+                                web_view.reload()
+                            }
                         }
                     }
 

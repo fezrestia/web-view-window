@@ -29,7 +29,6 @@ class ExtendedWebView(
     private lateinit var backHandler: Handler
 
     private lateinit var nopTask: EvalJsTask
-    private lateinit var reloadTask: ReloadTask
 
     private val JSNI = JavaScriptNativeInterface()
 
@@ -38,6 +37,10 @@ class ExtendedWebView(
 
     /** Extended WebView is active or not. */
     var isActive = false
+        private set
+
+    /** Raise this flag when rendering engine is killed to reload web page later. */
+    var isReloadRequired = false
         private set
 
     private var callback: Callback? = null
@@ -154,14 +157,15 @@ class ExtendedWebView(
         // Java Script.
         val script = loadJs(JS_NOP)
         nopTask = EvalJsTask(script, EvalJsCallback())
-
-        // Tasks.
-        reloadTask = ReloadTask()
     }
 
     override fun onResume() {
         super.onResume()
         isActive = true
+
+        if (isReloadRequired) {
+            reload()
+        }
     }
 
     override fun onPause() {
@@ -185,7 +189,6 @@ class ExtendedWebView(
         removeJavascriptInterface(INJECTED_JAVA_SCRIPT_NATIVE_INTERFACE_OBJECT_NAME)
 
         App.ui.removeCallbacks(nopTask)
-        App.ui.removeCallbacks(reloadTask)
 
         backHandlerThread.quitSafely()
 
@@ -216,13 +219,8 @@ class ExtendedWebView(
 
     override fun reload() {
         stopLoading()
+        isReloadRequired = false
         super.reload()
-    }
-
-    private inner class ReloadTask : Runnable {
-        override fun run() {
-            reload()
-        }
     }
 
     /**
@@ -325,6 +323,10 @@ class ExtendedWebView(
                 } else {
                     Log.logDebug(TAG, "## WebView Rendering Process is killed by LMK.")
                 }
+            }
+
+            if (view === this@ExtendedWebView) {
+                isReloadRequired = true
             }
 
             FirebaseAnalyticsInterface.logOnRenderProcessGone(detail)
