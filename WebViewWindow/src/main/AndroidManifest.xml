@@ -3,8 +3,8 @@
 
     xmlns:tools="http://schemas.android.com/tools"
 
-    android:versionCode="846"
-    android:versionName="2.4.9-846"
+    android:versionCode="850"
+    android:versionName="2.4.10-850"
 >
 <!--                     | | | |-> incremental build count
                          | | |-> patch

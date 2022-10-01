@@ -96,7 +96,7 @@ object FirebaseAnalyticsInterface {
     fun logOnTrimMemory(level: Int) {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "logOnTrimMemory() : E")
 
-        val firebaseParam = when (level) {
+        val firebaseParam: String = when (level) {
             // Application in foreground.
             ComponentCallbacks2.TRIM_MEMORY_RUNNING_MODERATE -> {
                 if (Log.IS_DEBUG) Log.logDebug(TAG, "logOnTrimMemory() : Level=TRIM_MEMORY_RUNNING_MODERATE")
@@ -148,7 +148,7 @@ object FirebaseAnalyticsInterface {
     fun logOnRenderProcessGone(detail: RenderProcessGoneDetail) {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "logOnRenderProcessGone() : E")
 
-        val firebaseParam = if (detail.didCrash()) {
+        val firebaseParam: String = if (detail.didCrash()) {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "logOnRenderProcessGone() : Crashed")
 
             RenderProcessState.Params.Value.CRASH

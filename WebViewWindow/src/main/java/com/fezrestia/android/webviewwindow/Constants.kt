@@ -42,14 +42,14 @@ object Constants {
                 }
 
                 object Value {
-                    const val RUNNING_MODERATE = "RUNNING_MODERATE"
-                    const val RUNNING_LOW = "RUNNING_LOW"
-                    const val RUNNING_CRITICAL = "CRITICAL"
-                    const val UI_HIDDEN = "UI_HIDDEN"
-                    const val BACKGROUND = "BACKGROUND"
-                    const val MODERATE = "MODERATE"
-                    const val COMPLETE = "COMPLETE"
-                    const val ELSE = "ELSE"
+                    const val RUNNING_MODERATE  = "RUNNING_MODERATE"
+                    const val RUNNING_LOW       = "RUNNING_LOW"
+                    const val RUNNING_CRITICAL  = "RUNNING_CRITICAL"
+                    const val UI_HIDDEN         = "UI_HIDDEN"
+                    const val BACKGROUND        = "BACKGROUND"
+                    const val MODERATE          = "MODERATE"
+                    const val COMPLETE          = "COMPLETE"
+                    const val ELSE              = "ELSE"
                 }
             }
         }
@@ -63,11 +63,11 @@ object Constants {
                 }
 
                 object Value {
-                    const val CRASH = "CRASH"
+                    const val CRASH                     = "CRASH"
                     const val LMK_ON_PRIORITY_WAIVED    = "LMK_ON_PRIORITY_WAIVED"
                     const val LMK_ON_PRIORITY_BOUND     = "LMK_ON_PRIORITY_BOUND"
                     const val LMK_ON_PRIORITY_IMPORTANT = "LMK_ON_PRIORITY_IMPORTANT"
-                    const val ELSE = "ELSE"
+                    const val ELSE                      = "ELSE"
                 }
             }
         }
