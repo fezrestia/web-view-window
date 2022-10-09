@@ -37,35 +37,44 @@ class WebViewWindowController(private val context: Context) {
      */
     fun release() {
         // Fail safe.
-        if (wakeLock.isHeld) {
-            wakeLock.release()
-        }
+        releaseWakeLock()
     }
 
     /**
      * Activate overlay window interaction.
-     * After this API called, WakeLock is acquired until stop() is called.
      */
     fun start() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "start() : E")
 
-        // Acquire WakeLock immediately.
-        UpdateWakeLockTask().let { task ->
-            App.ui.post(task)
-            updateWakeLockTask = task
-        }
+        // NOP.
 
         if (Log.IS_DEBUG) Log.logDebug(TAG, "start() : X")
     }
 
     /**
      * De-activate overlay window interaction.
-     * WakeLock will be released, so WebFrame contents may be paused/stopped.
      */
     fun stop() {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "stop() : E")
 
-        // Remove update task.
+        // Fail safe.
+        releaseWakeLock()
+
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "stop() : X")
+    }
+
+    fun acquireWakeLock() {
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "acquireWakeLock()")
+
+        UpdateWakeLockTask().let { task ->
+            App.ui.post(task)
+            updateWakeLockTask = task
+        }
+    }
+
+    fun releaseWakeLock() {
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "releaseWakeLock()")
+
         updateWakeLockTask?.let { task ->
             App.ui.removeCallbacks(task)
             updateWakeLockTask = null
@@ -73,8 +82,6 @@ class WebViewWindowController(private val context: Context) {
         if (wakeLock.isHeld) {
             wakeLock.release()
         }
-
-        if (Log.IS_DEBUG) Log.logDebug(TAG, "stop() : X")
     }
 
     private inner class UpdateWakeLockTask : Runnable {

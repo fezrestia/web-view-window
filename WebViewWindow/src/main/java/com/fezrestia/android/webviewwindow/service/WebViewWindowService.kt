@@ -132,6 +132,14 @@ class WebViewWindowService : Service() {
             val states = view.getWebViewStates()
             controller.saveWebViewStates(states)
         }
+
+        override fun onWakeLockAcquireRequested() {
+            controller.acquireWakeLock()
+        }
+
+        override fun onWakeLockReleaseRequested() {
+            controller.releaseWakeLock()
+        }
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {

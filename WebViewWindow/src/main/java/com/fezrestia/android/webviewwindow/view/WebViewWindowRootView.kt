@@ -72,6 +72,8 @@ class WebViewWindowRootView(
         fun onNewWebFrameRequired()
         fun onFullBrowserRequired(url: String)
         fun onSaveStateRequired()
+        fun onWakeLockAcquireRequested()
+        fun onWakeLockReleaseRequested()
     }
     private var callback: Callback? = null
 
@@ -371,7 +373,7 @@ class WebViewWindowRootView(
             }
 
             else -> {
-                // NOP. Maybe now on Opened.
+                // NOP. Maybe now on Opened. Wakelock acquire/release is not necessary.
                 return false
             }
         }
@@ -698,6 +700,9 @@ class WebViewWindowRootView(
                             resizer_grip.visibility = VISIBLE
                             add_new_web_frame_button.visibility = VISIBLE
 
+                            // Request to acquire WakeLock.
+                            callback?.onWakeLockAcquireRequested()
+
                             return // Exit task.
                         }
 
@@ -721,6 +726,9 @@ class WebViewWindowRootView(
                             // Disable right-bottom icons.
                             resizer_grip.visibility = INVISIBLE
                             add_new_web_frame_button.visibility = INVISIBLE
+
+                            // Request to release WakeLock
+                            callback?.onWakeLockReleaseRequested()
 
                             return // Exit task.
                         }
@@ -797,6 +805,9 @@ class WebViewWindowRootView(
 
                     resizer_grip.visibility = VISIBLE
                     add_new_web_frame_button.visibility = VISIBLE
+
+                    // Request to acquire WakeLock.
+                    callback?.onWakeLockAcquireRequested()
                 }
 
                 // Collapse direction.
@@ -808,6 +819,9 @@ class WebViewWindowRootView(
                     // Disable right-bottom icons.
                     resizer_grip.visibility = INVISIBLE
                     add_new_web_frame_button.visibility = INVISIBLE
+
+                    // Request to release WakeLock.
+                    callback?.onWakeLockReleaseRequested()
                 }
             }
 
