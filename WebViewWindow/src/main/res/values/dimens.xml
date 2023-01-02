@@ -14,4 +14,10 @@
 
     <dimen name="entry_view_background_stroke_width">1dp</dimen>
 
+    <dimen name="nav_bar_button_width">36dp</dimen>
+    <dimen name="nav_bar_button_height">36dp</dimen>
+    <dimen name="nav_bar_url_horizontal_padding">8dp</dimen>
+    <dimen name="nav_bar_button_text_size">24sp</dimen>
+    <dimen name="nav_bar_url_text_size">12sp</dimen>
+
 </resources>

@@ -873,17 +873,20 @@ class WebViewWindowRootView(
     companion object {
         private const val TAG = "WebViewWindowRootView"
 
+        // Some app can not handle touch event as like as normal state with focused overlay window.
+        // So, do not use interactive window flags with global key event.
         private const val INTERACTIVE_WINDOW_FLAGS = ( 0 // Dummy
                 or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                 or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
                 or WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+                or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE // Do not gain focus always.
         )
 
         private const val NOT_INTERACTIVE_WINDOW_FLAGS = ( 0 // Dummy
                 or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                 or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
                 or WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+                or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
         )
 
         // Screen long line clearance.

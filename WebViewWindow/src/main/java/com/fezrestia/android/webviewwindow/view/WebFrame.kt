@@ -86,6 +86,8 @@ class WebFrame(
             val visible = if (url.startsWith("http://")) View.VISIBLE else View.INVISIBLE
             http_indicator.visibility = visible
 
+            nav_bar_url.text = url
+
             callback?.onUrlChanged(url)
         }
     }
@@ -110,6 +112,10 @@ class WebFrame(
         // Web view.
         web_view.initialize(ExtendedWebViewCallbackImpl())
         web_view.onResume()
+
+        // Navigation bar.
+        nav_bar_back_button.setOnClickListener(NavBarBackButtonOnClickListener())
+        nav_bar_fore_button.setOnClickListener(NavBarForeButtonOnClickListener())
 
         // Slider grip.
         slider_grip.setOnTouchListener(SliderGripOnTouchListenerImpl())
@@ -239,8 +245,14 @@ class WebFrame(
      */
     fun release() {
         callback = null
+
+        // Navigation bar.
+        nav_bar_back_button.setOnClickListener(null)
+        nav_bar_fore_button.setOnClickListener(null)
+
         slider_grip.setOnTouchListener(null)
         slider_grip.setOnLongClickListener(null)
+
         web_view.release()
     }
 
@@ -500,6 +512,22 @@ class WebFrame(
     private inner class LayoutObserverImpl : ViewTreeObserver.OnGlobalLayoutListener {
         override fun onGlobalLayout() {
             updateSliderGripPosition()
+        }
+    }
+
+    private inner class NavBarBackButtonOnClickListener : OnClickListener {
+        override fun onClick(v: View?) {
+            if (web_view.canGoBack()) {
+                web_view.goBack()
+            }
+        }
+    }
+
+    private inner class NavBarForeButtonOnClickListener : OnClickListener {
+        override fun onClick(v: View?) {
+            if (web_view.canGoForward()) {
+                web_view.goForward()
+            }
         }
     }
 
