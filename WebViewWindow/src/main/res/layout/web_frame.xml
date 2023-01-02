@@ -51,6 +51,15 @@
                     android:layout_gravity="end"
                 >
                     <TextView
+                        android:id="@+id/nav_bar_reload_button"
+                        android:layout_width="@dimen/nav_bar_button_width"
+                        android:layout_height="@dimen/nav_bar_button_height"
+                        android:text="@string/nav_bar_reload_button_label"
+                        android:textSize="@dimen/nav_bar_button_text_size"
+                        android:textColor="@color/dark_gray"
+                        android:gravity="center"
+                    />
+                    <TextView
                         android:id="@+id/nav_bar_back_button"
                         android:layout_width="@dimen/nav_bar_button_width"
                         android:layout_height="@dimen/nav_bar_button_height"

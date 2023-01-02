@@ -7,7 +7,6 @@
     <string name="enable_disable">Enable/Disable</string>
     <string name="base_load_url">Base Load URL</string>
 
-    <string name="popup_menu_title_reload">Reload</string>
     <string name="popup_menu_title_close">Close</string>
     <string name="popup_menu_title_open_on_chrome_custom_tab">Open on Chrome Custom Tab</string>
     <string name="popup_menu_title_youtube_endless_loop">Youtube:EndlessLoop</string>
@@ -20,5 +19,6 @@
 
     <string name="nav_bar_back_button_label">←</string>
     <string name="nav_bar_fore_button_label">→</string>
+    <string name="nav_bar_reload_button_label">↻</string>
 
 </resources>

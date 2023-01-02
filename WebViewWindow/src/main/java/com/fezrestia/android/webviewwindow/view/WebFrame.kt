@@ -116,6 +116,7 @@ class WebFrame(
         // Navigation bar.
         nav_bar_back_button.setOnClickListener(NavBarBackButtonOnClickListener())
         nav_bar_fore_button.setOnClickListener(NavBarForeButtonOnClickListener())
+        nav_bar_reload_button.setOnClickListener(NavBarReloadButtonOnClickListener())
 
         // Slider grip.
         slider_grip.setOnTouchListener(SliderGripOnTouchListenerImpl())
@@ -249,6 +250,7 @@ class WebFrame(
         // Navigation bar.
         nav_bar_back_button.setOnClickListener(null)
         nav_bar_fore_button.setOnClickListener(null)
+        nav_bar_reload_button.setOnClickListener(null)
 
         slider_grip.setOnTouchListener(null)
         slider_grip.setOnLongClickListener(null)
@@ -378,10 +380,6 @@ class WebFrame(
                 if (Log.IS_DEBUG) Log.logDebug(TAG, "onMenuItemClick()")
 
                 when (item.itemId) {
-                    R.id.popup_menu_reload -> {
-                        if (Log.IS_DEBUG) Log.logDebug(TAG, "## Popup : Reload")
-                        web_view.reload()
-                    }
                     R.id.popup_menu_close -> {
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "## Popup : Close")
                         callback?.onCloseRequired(frameOrder)
@@ -528,6 +526,12 @@ class WebFrame(
             if (web_view.canGoForward()) {
                 web_view.goForward()
             }
+        }
+    }
+
+    private inner class NavBarReloadButtonOnClickListener : OnClickListener {
+        override fun onClick(v: View?) {
+            web_view.reload()
         }
     }
 
