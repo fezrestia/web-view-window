@@ -106,7 +106,7 @@ class WebViewWindowRootView(
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                INTERACTIVE_WINDOW_FLAGS, // Initialize as opened state.
+                NOT_INTERACTIVE_WINDOW_FLAGS,
                 PixelFormat.TRANSLUCENT)
 
         if (Log.IS_DEBUG) Log.logDebug(TAG, "initialize() : X")
@@ -317,12 +317,7 @@ class WebViewWindowRootView(
             val containerParams = web_frame_container.layoutParams
 
             // Layout.
-            if (windowLayoutParams.flags == INTERACTIVE_WINDOW_FLAGS) {
-                // Opened state.
-                containerParams.height = openedWindowLayout.height
-                windowLayoutParams.x = openedWindowLayout.x
-                windowLayoutParams.height = openedWindowLayout.height
-            } else {
+            if (isHidden()) {
                 // Closed or Hidden state.
 
                 containerParams.height = closedWindowLayout.height
@@ -333,6 +328,11 @@ class WebViewWindowRootView(
                     // Hidden state.
                     windowLayoutParams.x = WINDOW_HIDDEN_POS_X
                 }
+            } else {
+                // Opened state.
+                containerParams.height = openedWindowLayout.height
+                windowLayoutParams.x = openedWindowLayout.x
+                windowLayoutParams.height = openedWindowLayout.height
             }
 
             // Update layout.
@@ -530,6 +530,24 @@ class WebViewWindowRootView(
 
             callback?.onSaveStateRequired()
         }
+
+        override fun onToggleFocusRequested() {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onToggleFocusRequested()")
+
+            if (windowLayoutParams.flags == NOT_INTERACTIVE_WINDOW_FLAGS) {
+                windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
+
+                // Enable dim behind during gain focus.
+                windowLayoutParams.flags += WindowManager.LayoutParams.FLAG_DIM_BEHIND
+                windowLayoutParams.dimAmount = 0.6f
+            } else {
+                windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
+            }
+
+            windowManager.updateViewLayout(
+                this@WebViewWindowRootView,
+                windowLayoutParams)
+        }
     }
 
     private inner class ResizerGripTouchEventHandler : OnTouchListener {
@@ -645,15 +663,8 @@ class WebViewWindowRootView(
         private var lastDeltaH = 0
 
         init {
-            when (targetWindowLayout.height) {
-                openedWindowLayout.height -> {
-                    windowLayoutParams.flags = INTERACTIVE_WINDOW_FLAGS
-                }
-                closedWindowLayout.height -> {
-                    windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
-                }
-                else -> throw RuntimeException("Unexpected target = $targetWindowLayout")
-            }
+            // Always release focus on open/close overlay.
+            windowLayoutParams.flags = NOT_INTERACTIVE_WINDOW_FLAGS
         }
 
         override fun run() {
@@ -873,13 +884,10 @@ class WebViewWindowRootView(
     companion object {
         private const val TAG = "WebViewWindowRootView"
 
-        // Some app can not handle touch event as like as normal state with focused overlay window.
-        // So, do not use interactive window flags with global key event.
         private const val INTERACTIVE_WINDOW_FLAGS = ( 0 // Dummy
                 or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                 or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
                 or WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
-                or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE // Do not gain focus always.
         )
 
         private const val NOT_INTERACTIVE_WINDOW_FLAGS = ( 0 // Dummy

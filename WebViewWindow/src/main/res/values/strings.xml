@@ -20,5 +20,6 @@
     <string name="nav_bar_back_button_label">←</string>
     <string name="nav_bar_fore_button_label">→</string>
     <string name="nav_bar_reload_button_label">↻</string>
+    <string name="nav_bar_toggle_focus_button_label">φ</string>
 
 </resources>

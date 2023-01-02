@@ -71,6 +71,8 @@ class WebFrame(
         fun onStartChromeCustomTabRequired(url: String)
 
         fun onUrlChanged(url: String)
+
+        fun onToggleFocusRequested()
     }
 
     private inner class ExtendedWebViewCallbackImpl : ExtendedWebView.Callback {
@@ -117,6 +119,7 @@ class WebFrame(
         nav_bar_back_button.setOnClickListener(NavBarBackButtonOnClickListener())
         nav_bar_fore_button.setOnClickListener(NavBarForeButtonOnClickListener())
         nav_bar_reload_button.setOnClickListener(NavBarReloadButtonOnClickListener())
+        nav_bar_toggle_focus_button.setOnClickListener(NavBarToggleFocusButtonOnClickListener())
 
         // Slider grip.
         slider_grip.setOnTouchListener(SliderGripOnTouchListenerImpl())
@@ -251,6 +254,7 @@ class WebFrame(
         nav_bar_back_button.setOnClickListener(null)
         nav_bar_fore_button.setOnClickListener(null)
         nav_bar_reload_button.setOnClickListener(null)
+        nav_bar_toggle_focus_button.setOnClickListener(null)
 
         slider_grip.setOnTouchListener(null)
         slider_grip.setOnLongClickListener(null)
@@ -532,6 +536,12 @@ class WebFrame(
     private inner class NavBarReloadButtonOnClickListener : OnClickListener {
         override fun onClick(v: View?) {
             web_view.reload()
+        }
+    }
+
+    private inner class NavBarToggleFocusButtonOnClickListener : OnClickListener {
+        override fun onClick(v: View?) {
+            callback?.onToggleFocusRequested()
         }
     }
 
