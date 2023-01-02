@@ -15,6 +15,7 @@ import android.webkit.*
 
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.App
+import com.fezrestia.android.webviewwindow.Constants
 import com.fezrestia.android.webviewwindow.FirebaseAnalyticsInterface
 
 import java.io.BufferedReader
@@ -144,12 +145,20 @@ class ExtendedWebView(
         // Enable Javascript.
         webSettings.javaScriptEnabled = true
         webSettings.javaScriptCanOpenWindowsAutomatically = true
+
         // User Agent.
-        val old = webSettings.userAgentString
-        val pkgName = context.packageName
-        val pkgInfo = context.packageManager.getPackageInfo(pkgName, PackageManager.GET_META_DATA)
-        val verName = pkgInfo.versionName
-        webSettings.userAgentString = "$old WebViewWindow/$verName"
+        var customUserAgent = App.sp.getString(
+            Constants.SP_KEY_CUSTOM_USER_AGENT,
+            "") as String
+        if (customUserAgent.isEmpty()) {
+            val old = webSettings.userAgentString
+            val pkgName = context.packageName
+            val pkgInfo =
+                context.packageManager.getPackageInfo(pkgName, PackageManager.GET_META_DATA)
+            val verName = pkgInfo.versionName
+            customUserAgent = "$old WebViewWindow/$verName"
+        }
+        webSettings.userAgentString = customUserAgent
 
         // Java Script Native Interface.
         addJavascriptInterface(JSNI, INJECTED_JAVA_SCRIPT_NATIVE_INTERFACE_OBJECT_NAME)

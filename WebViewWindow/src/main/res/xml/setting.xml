@@ -18,6 +18,12 @@
             app:persistent="true"
             app:useSimpleSummaryProvider="true"
         />
+        <androidx.preference.EditTextPreference
+            app:key="sp-key-custom-user-agent"
+            app:title="@string/custom_user_agent"
+            app:persistent="true"
+            app:useSimpleSummaryProvider="true"
+        />
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory
