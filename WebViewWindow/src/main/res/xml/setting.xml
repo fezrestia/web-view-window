@@ -19,8 +19,14 @@
             app:useSimpleSummaryProvider="true"
         />
         <androidx.preference.EditTextPreference
-            app:key="sp-key-custom-user-agent"
-            app:title="@string/custom_user_agent"
+            app:key="sp-key-custom-user-agent-for-mobile"
+            app:title="@string/custom_user_agent_for_mobile"
+            app:persistent="true"
+            app:useSimpleSummaryProvider="true"
+        />
+        <androidx.preference.EditTextPreference
+            app:key="sp-key-custom-user-agent-for-desktop"
+            app:title="@string/custom_user_agent_for_desktop"
             app:persistent="true"
             app:useSimpleSummaryProvider="true"
         />

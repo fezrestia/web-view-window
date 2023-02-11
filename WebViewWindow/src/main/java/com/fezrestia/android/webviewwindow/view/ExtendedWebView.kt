@@ -46,6 +46,21 @@ class ExtendedWebView(
 
     private var callback: Callback? = null
 
+    /** Current User-Agent setting key. */
+    var currentUserAgentKey = Constants.SP_KEY_CUSTOM_USER_AGENT_FOR_MOBILE
+
+    private val defaultUserAgent: String
+
+    // CONSTRUCTOR.
+    init {
+        // Default User-Agent.
+        val old = settings.userAgentString
+        val pkgName = context.packageName
+        val pkgInfo = context.packageManager.getPackageInfo(pkgName, PackageManager.GET_META_DATA)
+        val verName = pkgInfo.versionName
+        defaultUserAgent = "$old WebViewWindow/$verName"
+    }
+
     /**
      * Extended WebView callback interface.
      */
@@ -146,19 +161,8 @@ class ExtendedWebView(
         webSettings.javaScriptEnabled = true
         webSettings.javaScriptCanOpenWindowsAutomatically = true
 
-        // User Agent.
-        var customUserAgent = App.sp.getString(
-            Constants.SP_KEY_CUSTOM_USER_AGENT,
-            "") as String
-        if (customUserAgent.isEmpty()) {
-            val old = webSettings.userAgentString
-            val pkgName = context.packageName
-            val pkgInfo =
-                context.packageManager.getPackageInfo(pkgName, PackageManager.GET_META_DATA)
-            val verName = pkgInfo.versionName
-            customUserAgent = "$old WebViewWindow/$verName"
-        }
-        webSettings.userAgentString = customUserAgent
+        // Default User Agent.
+        updateUserAgentBySharedPreferenceKey(currentUserAgentKey)
 
         // Java Script Native Interface.
         addJavascriptInterface(JSNI, INJECTED_JAVA_SCRIPT_NATIVE_INTERFACE_OBJECT_NAME)
@@ -230,6 +234,20 @@ class ExtendedWebView(
         stopLoading()
         isReloadRequired = false
         super.reload()
+    }
+
+    fun updateUserAgentBySharedPreferenceKey(spKey: String) {
+        currentUserAgentKey = spKey
+
+        // Get current user setting.
+        var customUserAgent = App.sp.getString(currentUserAgentKey, "") as String
+
+        // Use default if user setting is empty.
+        if (customUserAgent.isEmpty()) {
+            customUserAgent = defaultUserAgent
+        }
+
+        settings.userAgentString = customUserAgent
     }
 
     /**

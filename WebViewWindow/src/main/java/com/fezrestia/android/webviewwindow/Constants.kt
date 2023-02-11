@@ -18,8 +18,10 @@ object Constants {
     const val SP_KEY_BASE_LOAD_URL = "sp-key-base-load-url"
     /** SP Key, WebView states on overlay window closed. */
     const val SP_KEY_LAST_WEB_VIEW_STATES_JSON = "sp-key-last-web-view-state-json"
-    /** SP Key, custom user-agent string. */
-    const val SP_KEY_CUSTOM_USER_AGENT = "sp-key-custom-user-agent"
+    /** SP Key, custom user-agent for mobile string. */
+    const val SP_KEY_CUSTOM_USER_AGENT_FOR_MOBILE = "sp-key-custom-user-agent-for-mobile"
+    /** SP Key, custom user-agent for desktop string. */
+    const val SP_KEY_CUSTOM_USER_AGENT_FOR_DESKTOP = "sp-key-custom-user-agent-for-desktop"
 
     /** SP key, DEBUG, force crash. */
     const val SP_KEY_DEBUG_FORCE_CRASH = "sp-key-debug-force-crash"

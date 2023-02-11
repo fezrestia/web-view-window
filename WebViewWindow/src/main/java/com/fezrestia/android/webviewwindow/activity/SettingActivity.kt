@@ -96,7 +96,8 @@ class SettingActivity : AppCompatActivity() {
                         preference.summary = summary
                     }
 
-                    Constants.SP_KEY_CUSTOM_USER_AGENT -> {
+                    Constants.SP_KEY_CUSTOM_USER_AGENT_FOR_MOBILE,
+                    Constants.SP_KEY_CUSTOM_USER_AGENT_FOR_DESKTOP -> {
                         val ua = newValue as String?
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "CustomUserAgent = $ua")
 

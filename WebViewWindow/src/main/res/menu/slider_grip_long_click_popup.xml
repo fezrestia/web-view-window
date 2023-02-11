@@ -14,4 +14,16 @@
         android:id="@+id/popup_menu_youtube_endless_loop"
         android:title="@string/popup_menu_title_youtube_endless_loop"
     />
+    <group
+            android:id="@+id/popup_menu_group_user_agent"
+    >
+        <item
+            android:id="@+id/popup_menu_change_user_agent_to_mobile"
+            android:title="@string/popup_menu_title_change_user_agent_to_mobile"
+        />
+        <item
+            android:id="@+id/popup_menu_change_user_agent_to_desktop"
+            android:title="@string/popup_menu_title_change_user_agent_to_desktop"
+        />
+    </group>
 </menu>

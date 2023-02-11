@@ -22,6 +22,7 @@ import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.BuildConfig
+import com.fezrestia.android.webviewwindow.Constants
 import com.fezrestia.android.webviewwindow.R
 import kotlinx.android.synthetic.main.web_frame.view.*
 import org.apache.commons.validator.routines.UrlValidator
@@ -372,6 +373,16 @@ class WebFrame(
                 }
             }
 
+            // Remove current User-Agent changer.
+            when (web_view.currentUserAgentKey) {
+                Constants.SP_KEY_CUSTOM_USER_AGENT_FOR_MOBILE -> {
+                    popup.menu.removeItem(R.id.popup_menu_change_user_agent_to_mobile)
+                }
+                Constants.SP_KEY_CUSTOM_USER_AGENT_FOR_DESKTOP -> {
+                    popup.menu.removeItem(R.id.popup_menu_change_user_agent_to_desktop)
+                }
+            }
+
             popup.show()
 
             return true
@@ -402,6 +413,16 @@ class WebFrame(
                                 loadYoutubeEndlessLoop(videoId)
                             }
                         }
+                    }
+                    R.id.popup_menu_change_user_agent_to_mobile -> {
+                        if (Log.IS_DEBUG) Log.logDebug(TAG, "## Popup : Change User-Agent to Mobile")
+                        web_view.updateUserAgentBySharedPreferenceKey(Constants.SP_KEY_CUSTOM_USER_AGENT_FOR_MOBILE)
+                        web_view.reload()
+                    }
+                    R.id.popup_menu_change_user_agent_to_desktop -> {
+                        if (Log.IS_DEBUG) Log.logDebug(TAG, "## Popup : Change User-Agent to Desktop")
+                        web_view.updateUserAgentBySharedPreferenceKey(Constants.SP_KEY_CUSTOM_USER_AGENT_FOR_DESKTOP)
+                        web_view.reload()
                     }
                 }
 
