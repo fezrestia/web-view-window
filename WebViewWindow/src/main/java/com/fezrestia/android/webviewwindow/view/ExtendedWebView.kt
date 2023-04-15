@@ -164,6 +164,10 @@ class ExtendedWebView(
         // Default User Agent.
         updateUserAgentBySharedPreferenceKey(currentUserAgentKey)
 
+        // Zoom, Scale.
+        webSettings.useWideViewPort = false
+        webSettings.loadWithOverviewMode = true
+
         // Java Script Native Interface.
         addJavascriptInterface(JSNI, INJECTED_JAVA_SCRIPT_NATIVE_INTERFACE_OBJECT_NAME)
 
@@ -359,6 +363,11 @@ class ExtendedWebView(
             FirebaseAnalyticsInterface.logOnRenderProcessGone(detail)
 
             return true // Continue to run App.
+        }
+
+        override fun onScaleChanged(view: WebView?, oldScale: Float, newScale: Float) {
+            super.onScaleChanged(view, oldScale, newScale)
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onScaleChanged() : oldScale=$oldScale newScale=$newScale")
         }
     }
 

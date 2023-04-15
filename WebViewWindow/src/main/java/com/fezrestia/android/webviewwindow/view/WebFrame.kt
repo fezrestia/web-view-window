@@ -121,6 +121,8 @@ class WebFrame(
         nav_bar_fore_button.setOnClickListener(NavBarForeButtonOnClickListener())
         nav_bar_reload_button.setOnClickListener(NavBarReloadButtonOnClickListener())
         nav_bar_toggle_focus_button.setOnClickListener(NavBarToggleFocusButtonOnClickListener())
+        nav_bar_scale_down_button.setOnClickListener(NavBarScaleDownButtonOnClickListener())
+        nav_bar_scale_up_button.setOnClickListener(NavBarScaleUpButtonOnClickListener())
 
         // Slider grip.
         slider_grip.setOnTouchListener(SliderGripOnTouchListenerImpl())
@@ -256,6 +258,8 @@ class WebFrame(
         nav_bar_fore_button.setOnClickListener(null)
         nav_bar_reload_button.setOnClickListener(null)
         nav_bar_toggle_focus_button.setOnClickListener(null)
+        nav_bar_scale_down_button.setOnClickListener(null)
+        nav_bar_scale_up_button.setOnClickListener(null)
 
         slider_grip.setOnTouchListener(null)
         slider_grip.setOnLongClickListener(null)
@@ -563,6 +567,18 @@ class WebFrame(
     private inner class NavBarToggleFocusButtonOnClickListener : OnClickListener {
         override fun onClick(v: View?) {
             callback?.onToggleFocusRequested()
+        }
+    }
+
+    private inner class NavBarScaleDownButtonOnClickListener : OnClickListener {
+        override fun onClick(v: View?) {
+            web_view.zoomOut()
+        }
+    }
+
+    private inner class NavBarScaleUpButtonOnClickListener : OnClickListener {
+        override fun onClick(v: View?) {
+            web_view.zoomIn()
         }
     }
 
