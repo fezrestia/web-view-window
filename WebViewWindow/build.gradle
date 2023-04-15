@@ -12,12 +12,12 @@ def outDir = project.buildDir
 
 android {
     compileSdk 33
-    buildToolsVersion '33.0.1'
+    buildToolsVersion '33.0.2'
 
     defaultConfig {
         applicationId "com.fezrestia.android.webviewwindow"
         minSdkVersion 29
-        targetSdkVersion 32
+        targetSdkVersion 33
     }
 
     compileOptions {
@@ -87,27 +87,27 @@ android {
         lintConfig file('lint.xml')
         xmlOutput file("$outDir/reports/test-results-lint.xml")
     }
-    ndkVersion '25.1.8937393'
+    ndkVersion '25.2.9519653'
     namespace 'com.fezrestia.android.webviewwindow'
 
 }
 
 dependencies {
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.20'
     implementation 'androidx.preference:preference-ktx:1.2.0'
-    implementation 'org.jetbrains.kotlin:kotlin-reflect:1.8.0'
-    implementation 'androidx.browser:browser:1.4.0'
-    implementation 'com.google.android.material:material:1.7.0'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:1.8.20'
+    implementation 'androidx.browser:browser:1.5.0'
+    implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'commons-validator:commons-validator:1.7'
-    implementation 'androidx.activity:activity-ktx:1.6.1'
-    implementation 'androidx.fragment:fragment-ktx:1.5.5'
-    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'androidx.activity:activity-ktx:1.7.0'
+    implementation 'androidx.fragment:fragment-ktx:1.5.6'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
 
     // Firebase.
-    implementation platform('com.google.firebase:firebase-bom:30.2.0')
-    implementation 'com.google.firebase:firebase-analytics-ktx'
-    implementation 'com.google.firebase:firebase-crashlytics-ktx'
+    implementation platform('com.google.firebase:firebase-bom:31.5.0')
+    implementation 'com.google.firebase:firebase-analytics-ktx:21.2.2'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx:18.3.6'
 }
 
 repositories {
