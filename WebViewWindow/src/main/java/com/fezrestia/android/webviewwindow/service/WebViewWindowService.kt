@@ -106,7 +106,7 @@ class WebViewWindowService : Service() {
 
         controller.release()
 
-        stopForeground(true)
+        stopForeground(STOP_FOREGROUND_REMOVE)
 
         App.isEnabled = false
 

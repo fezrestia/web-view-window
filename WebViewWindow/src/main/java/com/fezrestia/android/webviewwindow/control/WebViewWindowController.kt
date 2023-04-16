@@ -120,9 +120,8 @@ class WebViewWindowController(private val context: Context) {
         val encodedList = mutableListOf<String>()
 
         states.forEach { state ->
-            state[Constants.WEB_VIEW_STATE_BUNDLE_KEY]?.let { it ->
-                val bytes = it as ByteArray
-                val encoded: String = Base64.encodeToString(bytes, Base64.DEFAULT)
+            state.getByteArray(Constants.WEB_VIEW_STATE_BUNDLE_KEY)?.let { it ->
+                val encoded: String = Base64.encodeToString(it, Base64.DEFAULT)
 
                 if (Log.IS_DEBUG) Log.logDebug(TAG, "BASE64 = $encoded")
 

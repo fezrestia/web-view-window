@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.http.SslError
+import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
@@ -56,7 +57,14 @@ class ExtendedWebView(
         // Default User-Agent.
         val old = settings.userAgentString
         val pkgName = context.packageName
-        val pkgInfo = context.packageManager.getPackageInfo(pkgName, PackageManager.GET_META_DATA)
+        val pkgInfo = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            @Suppress("DEPRECATION")
+            context.packageManager.getPackageInfo(pkgName, PackageManager.GET_META_DATA)
+        } else {
+            context.packageManager.getPackageInfo(
+                    pkgName,
+                    PackageManager.PackageInfoFlags.of(PackageManager.GET_META_DATA.toLong()))
+        }
         val verName = pkgInfo.versionName
         defaultUserAgent = "$old WebViewWindow/$verName"
     }
