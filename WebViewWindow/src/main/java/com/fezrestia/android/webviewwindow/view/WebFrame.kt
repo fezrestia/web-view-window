@@ -56,6 +56,11 @@ class WebFrame(
     private var totalFrameCount: Int = 0
     private var isTopFrame: Boolean = true
 
+    private val MAX_SCALE_RATE_PERCENT = 1000
+    private val MIN_SCALE_RATE_PERCENT = 10
+    private val SCALE_RATE_PERCENT_STEP = 10
+    private var currentScaleRatePercent = 100
+
     /**
      * WebFrame related event callback interface.
      */
@@ -123,6 +128,7 @@ class WebFrame(
         nav_bar_toggle_focus_button.setOnClickListener(NavBarToggleFocusButtonOnClickListener())
         nav_bar_scale_down_button.setOnClickListener(NavBarScaleDownButtonOnClickListener())
         nav_bar_scale_up_button.setOnClickListener(NavBarScaleUpButtonOnClickListener())
+        nav_bar_scale_reset_button.setOnClickListener(NavBarScaleResetButtonOnClickListener())
 
         // Slider grip.
         slider_grip.setOnTouchListener(SliderGripOnTouchListenerImpl())
@@ -572,14 +578,36 @@ class WebFrame(
 
     private inner class NavBarScaleDownButtonOnClickListener : OnClickListener {
         override fun onClick(v: View?) {
-            web_view.zoomOut()
+            currentScaleRatePercent -= SCALE_RATE_PERCENT_STEP
+            doChangeScaleRatePercent()
         }
     }
 
     private inner class NavBarScaleUpButtonOnClickListener : OnClickListener {
         override fun onClick(v: View?) {
-            web_view.zoomIn()
+            currentScaleRatePercent += SCALE_RATE_PERCENT_STEP
+            doChangeScaleRatePercent()
         }
+    }
+
+    private inner class NavBarScaleResetButtonOnClickListener : OnClickListener {
+        override fun onClick(v: View?) {
+            currentScaleRatePercent = 100
+            web_view.setInitialScale(0)
+        }
+    }
+
+    private fun doChangeScaleRatePercent() {
+        // Check limit.
+        if (currentScaleRatePercent < MIN_SCALE_RATE_PERCENT) {
+            currentScaleRatePercent = MIN_SCALE_RATE_PERCENT
+        }
+        if (currentScaleRatePercent > MAX_SCALE_RATE_PERCENT) {
+            currentScaleRatePercent = MAX_SCALE_RATE_PERCENT
+        }
+
+        // Do change.
+        web_view.setInitialScale(currentScaleRatePercent)
     }
 
     fun isActive(): Boolean { return web_view.isActive }

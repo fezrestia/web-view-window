@@ -174,7 +174,7 @@ class ExtendedWebView(
 
         // Zoom, Scale.
         webSettings.useWideViewPort = false
-        webSettings.loadWithOverviewMode = true
+        webSettings.loadWithOverviewMode = false
 
         // Java Script Native Interface.
         addJavascriptInterface(JSNI, INJECTED_JAVA_SCRIPT_NATIVE_INTERFACE_OBJECT_NAME)
