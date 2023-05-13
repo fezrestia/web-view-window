@@ -3,8 +3,8 @@
 
     xmlns:tools="http://schemas.android.com/tools"
 
-    android:versionCode="1056"
-    android:versionName="3.6.1-1056"
+    android:versionCode="1058"
+    android:versionName="3.7.0-1058"
 >
 <!--                     | | | |-> incremental build count
                          | | |-> patch

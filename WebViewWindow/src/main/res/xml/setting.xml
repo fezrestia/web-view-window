@@ -33,6 +33,17 @@
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory
+        app:title="ITX"
+    >
+        <androidx.preference.SwitchPreference
+            app:key="sp-key-will-collapse-on-closed"
+            app:title="@string/will_collapse_on_closed"
+            app:persistent="true"
+            app:defaultValue="true"
+        />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
         app:title="DEBUG"
     >
         <androidx.preference.SwitchPreference

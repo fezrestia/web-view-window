@@ -22,6 +22,7 @@ import android.widget.FrameLayout
 import com.fezrestia.android.webviewwindow.App
 import com.fezrestia.android.util.LayoutRect
 import com.fezrestia.android.util.Log
+import com.fezrestia.android.webviewwindow.Constants
 import com.fezrestia.android.webviewwindow.R
 import kotlinx.android.synthetic.main.overlay_root_view.view.*
 import kotlin.math.abs
@@ -60,6 +61,9 @@ class WebViewWindowRootView(
 
     // Animation per-frame task.
     private var windowStateConvergentTask: WindowStateConvergentTask? = null
+
+    // Configs.
+    private val willCollapseOnClosed = App.sp.getBoolean(Constants.SP_KEY_WILL_COLLAPSE_ON_CLOSED, true)
 
     // Web frames.
     private val webFrames: MutableList<WebFrame> = mutableListOf()
@@ -298,7 +302,13 @@ class WebViewWindowRootView(
         closedWindowLayout.x = -1 * (windowLayoutParams.width - SLIDER_GRIP_WIDTH_PIX)
         closedWindowLayout.y = windowLayoutParams.y
         closedWindowLayout.width = windowLayoutParams.width
-        closedWindowLayout.height = SLIDER_GRIP_HEIGHT_PIX * 2 + RIGHT_BOTTOM_ICON_SIZE_PIX * 2
+        if (willCollapseOnClosed) {
+            closedWindowLayout.height = SLIDER_GRIP_HEIGHT_PIX * 2 + RIGHT_BOTTOM_ICON_SIZE_PIX * 2
+        } else {
+            // Target position of open/close is detected by height value.
+            // so, different between open/close is necessary.
+            closedWindowLayout.height = windowLayoutParams.height - 1
+        }
     }
 
     private fun updateLayoutParams() {

@@ -22,6 +22,8 @@ object Constants {
     const val SP_KEY_CUSTOM_USER_AGENT_FOR_MOBILE = "sp-key-custom-user-agent-for-mobile"
     /** SP Key, custom user-agent for desktop string. */
     const val SP_KEY_CUSTOM_USER_AGENT_FOR_DESKTOP = "sp-key-custom-user-agent-for-desktop"
+    /** SP Key, tab list will collapse on closed. */
+    const val SP_KEY_WILL_COLLAPSE_ON_CLOSED = "sp-key-will-collapse-on-closed"
 
     /** SP key, DEBUG, force crash. */
     const val SP_KEY_DEBUG_FORCE_CRASH = "sp-key-debug-force-crash"
