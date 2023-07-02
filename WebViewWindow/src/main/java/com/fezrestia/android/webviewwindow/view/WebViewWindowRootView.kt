@@ -408,7 +408,7 @@ class WebViewWindowRootView(
             App.ui.removeCallbacks(it)
         }
         // Auto open overlay window.
-        WindowStateConvergentTask(openedWindowLayout).let {
+        WindowStateConvergentTask(openedWindowLayout, ALPHA_OPEN).let {
             App.ui.post(it)
             windowStateConvergentTask = it
         }
@@ -420,7 +420,7 @@ class WebViewWindowRootView(
             App.ui.removeCallbacks(it)
         }
         // Auto close overlay window.
-        WindowStateConvergentTask(closedWindowLayout).let {
+        WindowStateConvergentTask(closedWindowLayout, ALPHA_CLOSE).let {
             App.ui.post(it)
             windowStateConvergentTask = it
         }
@@ -483,24 +483,30 @@ class WebViewWindowRootView(
         override fun onSlideWindowStopped(startedRawPos: Point, diffPos: Point, stoppedRawPos: Point) {
             if (Log.IS_DEBUG) Log.logDebug(TAG, "onSlideWindowStopped()")
 
-            val targetLayout: LayoutRect = if (0 < diffPos.x) { // Open direction.
+            val targetLayout: LayoutRect
+            val targetAlpha: Float
+            if (0 < diffPos.x) { // Open direction.
                 val openThreshold = displaySize.width / 3
                 if (openThreshold < stoppedRawPos.x) { // Do open.
-                    openedWindowLayout
+                    targetLayout = openedWindowLayout
+                    targetAlpha = ALPHA_OPEN
                 } else { // Stay closed.
-                    closedWindowLayout
+                    targetLayout = closedWindowLayout
+                    targetAlpha = ALPHA_CLOSE
                 }
             } else { // Close direction.
                 val closeThreshold = displaySize.width * 2 / 3
                 if (stoppedRawPos.x < closeThreshold) { // Do close.
-                    closedWindowLayout
+                    targetLayout = closedWindowLayout
+                    targetAlpha = ALPHA_CLOSE
                 } else { // Stay opened.
-                    openedWindowLayout
+                    targetLayout = openedWindowLayout
+                    targetAlpha = ALPHA_OPEN
                 }
             }
 
             // Start fix.
-            WindowStateConvergentTask(targetLayout).let {
+            WindowStateConvergentTask(targetLayout, targetAlpha).let {
                 App.ui.post(it)
                 windowStateConvergentTask = it
             }
@@ -658,7 +664,8 @@ class WebViewWindowRootView(
     }
 
     private inner class WindowStateConvergentTask(
-            private val targetWindowLayout: LayoutRect) : Runnable {
+            private val targetWindowLayout: LayoutRect,
+            private val targetAlpha: Float) : Runnable {
         private val TAG = "WindowPositionCorrectionTask"
 
         // Proportional gain.
@@ -671,6 +678,7 @@ class WebViewWindowRootView(
         private var lastDeltaX = 0
         private var lastDeltaY = 0
         private var lastDeltaH = 0
+        private var lastDeltaAlpha = 0.0f
 
         init {
             // Always release focus on open/close overlay.
@@ -682,10 +690,12 @@ class WebViewWindowRootView(
 
             val dX = targetWindowLayout.x - windowLayoutParams.x
             val dY = targetWindowLayout.y - windowLayoutParams.y
+            val dA = targetAlpha - windowLayoutParams.alpha
 
             // Update layout.
             windowLayoutParams.x += (dX * P_GAIN).toInt()
             windowLayoutParams.y += (dY * P_GAIN).toInt()
+            windowLayoutParams.alpha += (dA * P_GAIN)
 
             if (this@WebViewWindowRootView.isAttachedToWindow) {
                 windowManager.updateViewLayout(
@@ -698,13 +708,15 @@ class WebViewWindowRootView(
             }
 
             // Check open/close animation is done or not.
-            if (lastDeltaX == dX && lastDeltaY == dY) {
+            val isSameAlpha = (lastDeltaAlpha * 100.0f).toInt() == (dA * 100.0f).toInt()
+            if (lastDeltaX == dX && lastDeltaY == dY && isSameAlpha) {
                 // Correction is already convergent.
-                if (Log.IS_DEBUG) Log.logDebug(TAG, "Already position fixed.")
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "Already position/alpha fixed.")
 
-                // Fix position.
+                // Fix position/alpha.
                 windowLayoutParams.x = targetWindowLayout.x
                 windowLayoutParams.y = targetWindowLayout.y
+                windowLayoutParams.alpha = targetAlpha
 
                 // Expand/Collapse animation.
                 val layoutParams = web_frame_container.layoutParams
@@ -795,6 +807,7 @@ class WebViewWindowRootView(
 
             lastDeltaX = dX
             lastDeltaY = dY
+            lastDeltaAlpha = dA
 
             // Next.
             App.ui.postDelayed(this, WINDOW_ANIMATION_INTERVAL_MILLIS.toLong())
@@ -808,11 +821,12 @@ class WebViewWindowRootView(
             // Stop window animation immediately.
             App.ui.removeCallbacks(this)
 
-            // Fix position.
+            // Fix position/alpha.
             windowLayoutParams.x = targetWindowLayout.x
             windowLayoutParams.y = targetWindowLayout.y
             windowLayoutParams.width = targetWindowLayout.width
             windowLayoutParams.height = targetWindowLayout.height
+            windowLayoutParams.alpha = targetAlpha
 
             // Expand/Collapse animation.
             val layoutParams = web_frame_container.layoutParams
@@ -906,6 +920,9 @@ class WebViewWindowRootView(
                 or WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
                 or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
         )
+
+        private const val ALPHA_OPEN = 1.0f
+        private const val ALPHA_CLOSE = 0.5f
 
         // Screen long line clearance.
         private const val SCREEN_LONG_LINE_CLEARANCE = 0.8f
