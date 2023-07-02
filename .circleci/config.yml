@@ -3,7 +3,7 @@ version: 2.1
 defaults: &defaults
     working_directory: /tmp/workspace
     docker:
-          - image: circleci/android:api-30-ndk
+          - image: cimg/android:2023.06.1-ndk
 
 jobs:
     sync:
