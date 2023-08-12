@@ -12,7 +12,6 @@ def outDir = project.buildDir
 
 android {
     compileSdk 33
-    buildToolsVersion '33.0.2'
 
     buildFeatures {
         buildConfig true
@@ -39,7 +38,7 @@ android {
         }
     }
 
-    task incrementVersionCode {
+    tasks.register('incrementVersionCode') {
         def file = file("src/main/AndroidManifest.xml")
         def text = file.getText()
 
@@ -64,14 +63,14 @@ android {
         file.write(nameUpdatedText)
     }
 
-    tasks.whenTaskAdded { task ->
+    tasks.configureEach { task ->
         if (task.name == "generateReleaseBuildConfig" || task.name == "generateDebugBuildConfig") {
             task.dependsOn("incrementVersionCode")
         }
     }
 
     // Define APK name and replace.
-    applicationVariants.all { variant ->
+    applicationVariants.configureEach { variant ->
         variant.outputs.each { output ->
             if (output.outputFileName.endsWith(".apk")) {
                 def name = getArchivesBaseName()
@@ -98,20 +97,20 @@ android {
 
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.21'
-    implementation 'androidx.preference:preference-ktx:1.2.0'
+    implementation 'androidx.preference:preference-ktx:1.2.1'
     implementation 'org.jetbrains.kotlin:kotlin-reflect:1.8.21'
     implementation 'androidx.browser:browser:1.5.0'
     implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'commons-validator:commons-validator:1.7'
     implementation 'androidx.activity:activity-ktx:1.7.2'
-    implementation 'androidx.fragment:fragment-ktx:1.6.0'
+    implementation 'androidx.fragment:fragment-ktx:1.6.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
 
     // Firebase.
     implementation platform('com.google.firebase:firebase-bom:32.1.1')
     implementation 'com.google.firebase:firebase-analytics-ktx:21.3.0'
-    implementation 'com.google.firebase:firebase-crashlytics-ktx:18.3.7'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx:18.4.0'
 }
 
 repositories {
