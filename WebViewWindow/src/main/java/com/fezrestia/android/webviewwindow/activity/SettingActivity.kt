@@ -6,7 +6,6 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.result.contract.ActivityResultContracts
@@ -101,7 +100,7 @@ class SettingActivity : AppCompatActivity() {
                         val ua = newValue as String?
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "CustomUserAgent = $ua")
 
-                        val summary = if (ua != null && ua.isNotEmpty()) {
+                        val summary = if (!ua.isNullOrEmpty()) {
                             "User-Agent\n$ua"
                         } else {
                             "Use DEFAULT"
@@ -132,7 +131,7 @@ class SettingActivity : AppCompatActivity() {
 
     override fun onCreate(bundle: Bundle?) {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onCreate()")
-        super.onCreate(null)
+        super.onCreate(bundle)
 
         setContentView(R.layout.setting_activity)
 
@@ -189,15 +188,11 @@ class SettingActivity : AppCompatActivity() {
 
     //// RUNTIME PERMISSION RELATED
 
-    private val isRuntimePermissionRequired: Boolean
-        get() = Build.VERSION_CODES.M <= Build.VERSION.SDK_INT
-
     private val isSystemAlertWindowPermissionGranted: Boolean
         get() = Settings.canDrawOverlays(this)
 
     private val REQUIRED_PERMISSIONS =
         arrayOf(
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION,
@@ -206,59 +201,63 @@ class SettingActivity : AppCompatActivity() {
     private fun isPermissionGranted(permission: String): Boolean =
             checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
 
+    private val startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        REQUIRED_PERMISSIONS.forEach { permission ->
+            if (!isPermissionGranted(permission)) {
+                Log.logError(TAG, "Permission: $permission is NOT granted yet.")
+                finish()
+            }
+        }
+    }
+
     /**
      * Check permission.
 
      * @return immediateReturnRequired
      */
     private fun checkMandatoryPermissions(): Boolean {
-        if (Log.IS_DEBUG) Log.logDebug(TAG, "checkMandatoryPermissions()")
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "checkMandatoryPermissions() : E")
 
-        if (isRuntimePermissionRequired) {
-            if (!isSystemAlertWindowPermissionGranted) {
-                // Start permission setting.
-                val intent = Intent(
-                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:$packageName"))
+        if (!isSystemAlertWindowPermissionGranted) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "checkMandatoryPermissions() : isSystemAlertWindowPermissionGranted == true")
 
-                val startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-                    REQUIRED_PERMISSIONS.forEach { permission ->
-                        if (!isPermissionGranted(permission)) {
-                            Log.logError(TAG, "Permission: $permission is NOT granted yet.")
-                            finish()
-                        }
-                    }
-                }
-                startForResult.launch(intent)
+            // Start permission setting.
+            val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:$packageName"))
 
-                return true
+            startForResult.launch(intent)
+
+            return true
+        }
+
+        val permissions = mutableListOf<String>()
+
+        REQUIRED_PERMISSIONS.forEach { permission ->
+            if(!isPermissionGranted(permission)) {
+                permissions.add(permission)
             }
+        }
 
-            val permissions = mutableListOf<String>()
+        // Check background permission will be granted after foreground.
+        if (permissions.contains(Manifest.permission.ACCESS_COARSE_LOCATION)
+                || permissions.contains(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            permissions.remove(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        }
 
-            REQUIRED_PERMISSIONS.forEach { permission ->
-                if(!isPermissionGranted(permission)) {
-                    permissions.add(permission)
-                }
-            }
+        return if (permissions.isNotEmpty()) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "checkMandatoryPermissions() : permissions.isNotEmpty() == true")
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "    permissions = $permissions")
 
-            // Check background permission will be granted after foreground.
-            if (permissions.contains(Manifest.permission.ACCESS_COARSE_LOCATION)
-                    || permissions.contains(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                permissions.remove(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-            }
-
-            return if (permissions.isNotEmpty()) {
-                ActivityCompat.requestPermissions(
-                        this,
-                        permissions.toTypedArray(),
-                        REQUEST_CODE_MANAGE_PERMISSIONS)
-                true
-            } else {
-                false
-            }
+            ActivityCompat.requestPermissions(
+                    this,
+                    permissions.toTypedArray(),
+                    REQUEST_CODE_MANAGE_PERMISSIONS)
+            true
         } else {
-            return false
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "checkMandatoryPermissions() : return false")
+
+            false
         }
     }
 }
