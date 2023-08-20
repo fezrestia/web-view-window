@@ -696,6 +696,7 @@ class WebViewWindowRootView(
             windowLayoutParams.x += (dX * P_GAIN).toInt()
             windowLayoutParams.y += (dY * P_GAIN).toInt()
             windowLayoutParams.alpha += (dA * P_GAIN)
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "run() : Updated windowLayoutParams.x/y = [${windowLayoutParams.x}/${windowLayoutParams.y}]")
 
             if (this@WebViewWindowRootView.isAttachedToWindow) {
                 windowManager.updateViewLayout(
@@ -717,6 +718,7 @@ class WebViewWindowRootView(
                 windowLayoutParams.x = targetWindowLayout.x
                 windowLayoutParams.y = targetWindowLayout.y
                 windowLayoutParams.alpha = targetAlpha
+                if (Log.IS_DEBUG) Log.logDebug(TAG, "run() : Fixed windowLayoutParams.x/y = [${windowLayoutParams.x}/${windowLayoutParams.y}]")
 
                 // Expand/Collapse animation.
                 val layoutParams = web_frame_container.layoutParams
@@ -741,24 +743,22 @@ class WebViewWindowRootView(
 
                         closedWindowLayout.height -> {
                             // OK, Collapsing is done.
-                            if (Log.IS_DEBUG) Log.logDebug(TAG, "Collapsing DONE.")
-
                             // For collapse animation, fix window size at last,
-                            if (Log.IS_DEBUG) Log.logDebug(TAG, "Collapse window size at last.")
+                            if (Log.IS_DEBUG) Log.logDebug(TAG, "Collapsing DONE.")
 
                             // Animation final height.
                             layoutParams.height = closedWindowLayout.height
                             web_frame_container.layoutParams = layoutParams
 
-                            // Fix window size.
-                            windowLayoutParams.height = closedWindowLayout.height
-                            windowManager.updateViewLayout(
-                                    this@WebViewWindowRootView,
-                                    windowLayoutParams)
-
                             // Disable right-bottom icons.
                             resizer_grip.visibility = INVISIBLE
                             add_new_web_frame_button.visibility = INVISIBLE
+
+                            // Fix window size.
+//                            windowLayoutParams.height = closedWindowLayout.height
+//                            windowManager.updateViewLayout(
+//                                this@WebViewWindowRootView,
+//                                windowLayoutParams)
 
                             // Request to release WakeLock
                             callback?.onWakeLockReleaseRequested()
@@ -777,15 +777,11 @@ class WebViewWindowRootView(
                     if (layoutParams.height == closedWindowLayout.height) {
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "Expand window size in advance.")
 
-                        // Animation initial height.
-                        layoutParams.height = closedWindowLayout.height
-                        web_frame_container.layoutParams = layoutParams
-
                         // Fix window size.
-                        windowLayoutParams.height = openedWindowLayout.height
-                        windowManager.updateViewLayout(
-                                this@WebViewWindowRootView,
-                                windowLayoutParams)
+//                        windowLayoutParams.height = openedWindowLayout.height
+//                        windowManager.updateViewLayout(
+//                                this@WebViewWindowRootView,
+//                                windowLayoutParams)
                     }
 
                     val diff = targetWindowLayout.height - layoutParams.height
