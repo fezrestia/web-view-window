@@ -10,7 +10,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.hardware.display.DisplayManager
-import android.os.Build
 import android.os.IBinder
 import android.view.Display
 import android.view.WindowManager
@@ -47,7 +46,7 @@ class WebViewWindowService : Service() {
         val channel = NotificationChannel(
                 ONGOING_NOTIFICATION_CHANNEL,
                 getText(R.string.ongoing_notification),
-                NotificationManager.IMPORTANCE_MIN)
+                NotificationManager.IMPORTANCE_HIGH)
 
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(channel)
@@ -56,22 +55,21 @@ class WebViewWindowService : Service() {
                 .setContentTitle(getText(R.string.ongoing_notification))
                 .setSmallIcon(R.drawable.ongoing_notification_icon)
                 .setContentIntent(notificationContent)
+                .setOngoing(true)
+//                .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
+                .setFlag(Notification.FLAG_FOREGROUND_SERVICE, true)
+                .setFlag(Notification.FLAG_ONGOING_EVENT, true)
+                .setFlag(Notification.FLAG_NO_CLEAR, true)
                 .build()
     }
 
     private fun getWindowContext(): Context {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val dm = this.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-            val display: Display = dm.getDisplay(Display.DEFAULT_DISPLAY)
-            val displayCtx: Context = this.createDisplayContext(display)
-            val windowCtx: Context = displayCtx.createWindowContext(
+        val dm = this.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+        val display: Display = dm.getDisplay(Display.DEFAULT_DISPLAY)
+        val displayCtx: Context = this.createDisplayContext(display)
+        return displayCtx.createWindowContext(
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 null)
-            windowCtx
-        } else {
-            // Use service as context.
-            this
-        }
     }
 
     override fun onCreate() {
