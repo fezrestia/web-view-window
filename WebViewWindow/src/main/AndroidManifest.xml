@@ -3,8 +3,8 @@
 
     xmlns:tools="http://schemas.android.com/tools"
 
-    android:versionCode="1163"
-    android:versionName="3.7.7-1163"
+    android:versionCode="1177"
+    android:versionName="3.7.8-1177"
 >
 <!--                     | | | |-> incremental build count
                          | | |-> patch
