@@ -16,15 +16,19 @@ import android.util.AttributeSet
 import android.view.*
 import android.webkit.WebView
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.BuildConfig
 import com.fezrestia.android.webviewwindow.Constants
 import com.fezrestia.android.webviewwindow.R
-import kotlinx.android.synthetic.main.web_frame.view.*
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import org.apache.commons.validator.routines.UrlValidator
 import kotlin.math.abs
 import kotlin.math.min
@@ -60,6 +64,84 @@ class WebFrame(
     private val MIN_SCALE_RATE_PERCENT = 10
     private val SCALE_RATE_PERCENT_STEP = 10
     private var currentScaleRatePercent = 100
+
+    // View elements.
+    private val web_view: ExtendedWebView
+        get() {
+            return this.findViewById(R.id.web_view)
+        }
+    private val nav_bar_back_button: TextView
+        get() {
+            return this.findViewById(R.id.nav_bar_back_button)
+        }
+    private val nav_bar_fore_button: TextView
+        get() {
+            return this.findViewById(R.id.nav_bar_fore_button)
+        }
+    private val nav_bar_reload_button: TextView
+        get() {
+            return this.findViewById(R.id.nav_bar_reload_button)
+        }
+    private val nav_bar_toggle_focus_button: TextView
+        get() {
+            return this.findViewById(R.id.nav_bar_toggle_focus_button)
+        }
+    private val nav_bar_scale_down_button: TextView
+        get() {
+            return this.findViewById(R.id.nav_bar_scale_down_button)
+        }
+    private val nav_bar_scale_up_button: TextView
+        get() {
+            return this.findViewById(R.id.nav_bar_scale_up_button)
+        }
+    private val nav_bar_scale_reset_button: TextView
+        get() {
+            return this.findViewById(R.id.nav_bar_scale_reset_button)
+        }
+    private val nav_bar_url: TextView
+        get() {
+            return this.findViewById(R.id.nav_bar_url)
+        }
+    private val favicon_view: ImageView
+        get() {
+            return this.findViewById(R.id.favicon_view)
+        }
+    private val http_indicator: FrameLayout
+        get() {
+            return this.findViewById(R.id.http_indicator)
+        }
+    private val slider_grip_container: FrameLayout
+        get() {
+            return this.findViewById(R.id.slider_grip_container)
+        }
+    private val slider_grip: BlockNavigationImageView
+        get() {
+            return this.findViewById(R.id.slider_grip)
+        }
+    private val base_load_url: TextInputLayout
+        get() {
+            return this.findViewById(R.id.base_load_url)
+        }
+    private val base_load_url_input: TextInputEditText
+        get() {
+            return this.findViewById(R.id.base_load_url_input)
+        }
+    private val entry_view: ConstraintLayout
+        get() {
+            return this.findViewById(R.id.entry_view)
+        }
+    private val footer_label: TextView
+        get() {
+            return this.findViewById(R.id.footer_label)
+        }
+    private val paste_button: MaterialButton
+        get() {
+            return this.findViewById(R.id.paste_button)
+        }
+    private val load_url_button: MaterialButton
+        get() {
+            return this.findViewById(R.id.load_url_button)
+        }
 
     /**
      * WebFrame related event callback interface.

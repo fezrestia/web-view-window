@@ -18,13 +18,14 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
 
 import com.fezrestia.android.webviewwindow.App
 import com.fezrestia.android.util.LayoutRect
 import com.fezrestia.android.util.Log
 import com.fezrestia.android.webviewwindow.Constants
 import com.fezrestia.android.webviewwindow.R
-import kotlinx.android.synthetic.main.overlay_root_view.view.*
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -70,6 +71,24 @@ class WebViewWindowRootView(
 
     // Current top WebFrame.
     private lateinit var topWebFrame: WebFrame
+
+    // View elements.
+    private val web_frame_container: FrameLayout
+        get() {
+            return this.findViewById(R.id.web_frame_container)
+        }
+    private val right_bottom_icon_container: LinearLayout
+        get() {
+            return this.findViewById(R.id.right_bottom_icon_container)
+        }
+    private val resizer_grip: ImageView
+        get() {
+            return this.findViewById(R.id.resizer_grip)
+        }
+    private val add_new_web_frame_button: ImageView
+        get() {
+            return this.findViewById(R.id.add_new_web_frame_button)
+        }
 
     // UI event callback interface.
     interface Callback {
