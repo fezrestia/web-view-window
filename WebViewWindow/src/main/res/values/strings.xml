@@ -6,6 +6,7 @@
 
     <string name="enable_disable">Enable/Disable</string>
     <string name="base_load_url">Base Load URL</string>
+    <string name="base_load_url_description">base load url</string>
     <string name="custom_user_agent_for_mobile">Custom User-Agent for Mobile (Default)</string>
     <string name="custom_user_agent_for_desktop">Custom User-Agent for Desktop</string>
     <string name="will_collapse_on_closed">Collapse Tab List on Closed</string>
