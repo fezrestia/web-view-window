@@ -16,9 +16,9 @@ import com.fezrestia.android.webviewwindow.Constants.FirebaseEvent.RenderProcess
 import com.fezrestia.android.util.Log
 
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.analytics.ktx.logEvent
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.analytics.analytics
+import com.google.firebase.analytics.logEvent
+import com.google.firebase.Firebase
 
 class App : Application() {
     override fun onCreate() {
@@ -97,20 +97,6 @@ object FirebaseAnalyticsInterface {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "logOnTrimMemory() : E")
 
         val firebaseParam: String = when (level) {
-            // Application in foreground.
-            ComponentCallbacks2.TRIM_MEMORY_RUNNING_MODERATE -> {
-                if (Log.IS_DEBUG) Log.logDebug(TAG, "logOnTrimMemory() : Level=TRIM_MEMORY_RUNNING_MODERATE")
-                LowMemState.Params.Value.RUNNING_MODERATE
-            }
-            ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW -> {
-                if (Log.IS_DEBUG) Log.logDebug(TAG, "logOnTrimMemory() : Level=TRIM_MEMORY_RUNNING_LOW")
-                LowMemState.Params.Value.RUNNING_LOW
-            }
-            ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL -> {
-                if (Log.IS_DEBUG) Log.logDebug(TAG, "logOnTrimMemory() : Level=TRIM_MEMORY_RUNNING_CRITICAL")
-                LowMemState.Params.Value.RUNNING_CRITICAL
-            }
-
             // UI visibility change.
             ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN -> {
                 if (Log.IS_DEBUG) Log.logDebug(TAG, "logOnTrimMemory() : Level=TRIM_MEMORY_UI_HIDDEN")
@@ -121,14 +107,6 @@ object FirebaseAnalyticsInterface {
             ComponentCallbacks2.TRIM_MEMORY_BACKGROUND -> {
                 if (Log.IS_DEBUG) Log.logDebug(TAG, "logOnTrimMemory() : Level=TRIM_MEMORY_BACKGROUND")
                 LowMemState.Params.Value.BACKGROUND
-            }
-            ComponentCallbacks2.TRIM_MEMORY_MODERATE -> {
-                if (Log.IS_DEBUG) Log.logDebug(TAG, "logOnTrimMemory() : Level=TRIM_MEMORY_MODERATE")
-                LowMemState.Params.Value.MODERATE
-            }
-            ComponentCallbacks2.TRIM_MEMORY_COMPLETE -> {
-                if (Log.IS_DEBUG) Log.logDebug(TAG, "logOnTrimMemory() : Level=TRIM_MEMORY_COMPLETE")
-                LowMemState.Params.Value.COMPLETE
             }
 
             else -> {

@@ -7,10 +7,13 @@ apply plugin: 'com.google.firebase.crashlytics'
 
 import java.util.regex.Pattern
 
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+
 def outDir = project.getLayout().getBuildDirectory()
 
 android {
-    compileSdk 34
+    compileSdk = 36
 
     buildFeatures {
         buildConfig true
@@ -18,8 +21,8 @@ android {
 
     defaultConfig {
         applicationId "com.fezrestia.android.webviewwindow"
-        minSdk 31
-        targetSdk 34
+        minSdk 34
+        targetSdk 36
     }
 
     compileOptions {
@@ -41,7 +44,7 @@ android {
     applicationVariants.configureEach { variant ->
         variant.outputs.each { output ->
             if (output.outputFileName.endsWith(".apk")) {
-                def name = getArchivesBaseName()
+                def name = output.outputFileName - ".apk"
                 def ver = variant.versionName
 
                 if (variant.name == "release") {
@@ -58,10 +61,17 @@ android {
         lintConfig file('lint.xml')
         xmlOutput file("$outDir/reports/test-results-lint.xml")
     }
-    ndkVersion '26.1.10909125'
+    ndkVersion '29.0.13846066 rc3'
     namespace 'com.fezrestia.android.webviewwindow'
 
     incrementVersionCode()
+    buildToolsVersion '36.0.0'
+}
+
+tasks.withType(KotlinJvmCompile).configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
 }
 
 def incrementVersionCode() {
@@ -91,19 +101,20 @@ def incrementVersionCode() {
 
 dependencies {
     implementation 'androidx.preference:preference-ktx:1.2.1'
-    implementation 'org.jetbrains.kotlin:kotlin-reflect:2.0.21'
-    implementation 'androidx.browser:browser:1.8.0'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:2.2.0'
+    implementation 'androidx.browser:browser:1.9.0'
     implementation 'com.google.android.material:material:1.12.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
-    implementation 'commons-validator:commons-validator:1.9.0'
-    implementation 'androidx.activity:activity-ktx:1.9.3'
-    implementation 'androidx.fragment:fragment-ktx:1.8.5'
-    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
+    implementation 'commons-validator:commons-validator:1.10.0'
+    implementation 'androidx.activity:activity-ktx:1.10.1'
+    implementation 'androidx.fragment:fragment-ktx:1.8.8'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
 
     // Firebase.
-    implementation platform('com.google.firebase:firebase-bom:33.5.1')
-    implementation 'com.google.firebase:firebase-analytics-ktx:22.1.2'
-    implementation 'com.google.firebase:firebase-crashlytics-ktx:19.2.1'
+    implementation platform('com.google.firebase:firebase-bom:34.1.0')
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-crashlytics'
+
 }
 
 repositories {
