@@ -159,8 +159,6 @@ class ExtendedWebView(
         // Enable zoom.
         webSettings.builtInZoomControls = true
         webSettings.displayZoomControls = false
-        // Enable database API.
-        webSettings.databaseEnabled = true
         // Enable DOM API.
         webSettings.domStorageEnabled = true
         // Enable location API.

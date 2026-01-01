@@ -14,6 +14,8 @@ def outDir = project.getLayout().getBuildDirectory()
 
 android {
     compileSdk = 36
+    compileSdkMinor 1
+    buildToolsVersion '36.1.0'
 
     buildFeatures {
         buildConfig true
@@ -61,11 +63,10 @@ android {
         lintConfig file('lint.xml')
         xmlOutput file("$outDir/reports/test-results-lint.xml")
     }
-    ndkVersion '29.0.13846066 rc3'
+    ndkVersion '29.0.14206865'
     namespace 'com.fezrestia.android.webviewwindow'
 
     incrementVersionCode()
-    buildToolsVersion '36.0.0'
 }
 
 tasks.withType(KotlinJvmCompile).configureEach {
@@ -101,19 +102,19 @@ def incrementVersionCode() {
 
 dependencies {
     implementation 'androidx.preference:preference-ktx:1.2.1'
-    implementation 'org.jetbrains.kotlin:kotlin-reflect:2.2.0'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:2.3.0'
     implementation 'androidx.browser:browser:1.9.0'
-    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'com.google.android.material:material:1.13.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
-    implementation 'commons-validator:commons-validator:1.10.0'
-    implementation 'androidx.activity:activity-ktx:1.10.1'
-    implementation 'androidx.fragment:fragment-ktx:1.8.8'
+    implementation 'commons-validator:commons-validator:1.10.1'
+    implementation 'androidx.activity:activity-ktx:1.12.2'
+    implementation 'androidx.fragment:fragment-ktx:1.8.9'
     implementation 'androidx.appcompat:appcompat:1.7.1'
 
     // Firebase.
-    implementation platform('com.google.firebase:firebase-bom:34.1.0')
-    implementation 'com.google.firebase:firebase-analytics'
-    implementation 'com.google.firebase:firebase-crashlytics'
+    implementation platform('com.google.firebase:firebase-bom:34.7.0')
+    implementation 'com.google.firebase:firebase-analytics:23.0.0'
+    implementation 'com.google.firebase:firebase-crashlytics:20.0.3'
 
 }
 

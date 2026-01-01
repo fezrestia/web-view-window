@@ -3,8 +3,8 @@
 
     xmlns:tools="http://schemas.android.com/tools"
 
-    android:versionCode="1339"
-    android:versionName="3.7.19-1339"
+    android:versionCode="1383"
+    android:versionName="3.7.20-1383"
 >
 <!--                     | | | |-> incremental build count
                          | | |-> patch
