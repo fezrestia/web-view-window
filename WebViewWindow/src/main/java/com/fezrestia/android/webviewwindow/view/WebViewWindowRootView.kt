@@ -291,7 +291,7 @@ class WebViewWindowRootView(
                 windowLayoutParams.width = displaySize.shortLine
                 windowLayoutParams.height = (displaySize.longLine * SCREEN_LONG_LINE_CLEARANCE).toInt()
 
-                windowLayoutParams.y = statusBarSize / 4
+                windowLayoutParams.y = 0
             }
 
             Orientation.LANDSCAPE -> {
