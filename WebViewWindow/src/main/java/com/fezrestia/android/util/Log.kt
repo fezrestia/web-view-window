@@ -1,8 +1,10 @@
 package com.fezrestia.android.util
 
+import com.fezrestia.android.webviewwindow.BuildConfig
+
 object Log {
     // All area total log trigger.
-    const val IS_DEBUG = false
+    val IS_DEBUG = BuildConfig.DEBUG
 
     /**
      * Debug log.

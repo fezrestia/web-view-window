@@ -48,7 +48,7 @@ class WebViewWindowService : Service() {
                 getText(R.string.ongoing_notification),
                 NotificationManager.IMPORTANCE_HIGH)
 
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(channel)
 
         return Notification.Builder(this, ONGOING_NOTIFICATION_CHANNEL)
@@ -64,7 +64,7 @@ class WebViewWindowService : Service() {
     }
 
     private fun getWindowContext(): Context {
-        val dm = this.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+        val dm = this.getSystemService(DISPLAY_SERVICE) as DisplayManager
         val display: Display = dm.getDisplay(Display.DEFAULT_DISPLAY)
         val displayCtx: Context = this.createDisplayContext(display)
         return displayCtx.createWindowContext(
@@ -194,6 +194,11 @@ class WebViewWindowService : Service() {
 
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onStartCommand() : X")
         return START_NOT_STICKY
+    }
+
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        super.onTimeout(startId, fgsType)
+        Log.logError(TAG, "onTimeout() : startId=$startId, fpsType=$fgsType")
     }
 
     companion object {
