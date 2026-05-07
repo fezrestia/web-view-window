@@ -3,8 +3,8 @@
 
     xmlns:tools="http://schemas.android.com/tools"
 
-    android:versionCode="1394"
-    android:versionName="3.7.21-1394"
+    android:versionCode="1415"
+    android:versionName="3.7.22-1415"
 >
 <!--                     | | | |-> incremental build count
                          | | |-> patch
@@ -97,4 +97,3 @@
 
     </application>
 </manifest>
-
