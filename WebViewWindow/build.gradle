@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
 
 // Firebase.
 apply plugin: 'com.google.gms.google-services'
@@ -42,20 +41,6 @@ android {
         }
     }
 
-    // Define APK name and replace.
-    applicationVariants.configureEach { variant ->
-        variant.outputs.each { output ->
-            if (output.outputFileName.endsWith(".apk")) {
-                def name = output.outputFileName - ".apk"
-                def ver = variant.versionName
-
-                if (variant.name == "release") {
-                    output.outputFileName = "${name}_${ver}.apk"
-                }
-            }
-        }
-    }
-
     productFlavors {
     }
     lint {
@@ -67,6 +52,20 @@ android {
     namespace 'com.fezrestia.android.webviewwindow'
 
     incrementVersionCode()
+}
+
+androidComponents {
+    onVariants(selector().withBuildType("release")) { variant ->
+        variant.outputs.forEach { output ->
+            def ver = output.versionName.orNull
+            if (ver != null) {
+                def currentName = output.outputFileName.get()
+                def name = currentName.substring(0, currentName.lastIndexOf('.'))
+                name = name.replace("-release", "")
+                output.outputFileName.set("${name}_${ver}.apk")
+            }
+        }
+    }
 }
 
 tasks.withType(KotlinJvmCompile).configureEach {

@@ -3,8 +3,8 @@
 
     xmlns:tools="http://schemas.android.com/tools"
 
-    android:versionCode="1415"
-    android:versionName="3.7.22-1415"
+    android:versionCode="1438"
+    android:versionName="3.7.23-1438"
 >
 <!--                     | | | |-> incremental build count
                          | | |-> patch
@@ -16,10 +16,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
@@ -68,9 +67,8 @@
 
         <service
             android:name="com.fezrestia.android.webviewwindow.service.WebViewWindowService"
-            android:foregroundServiceType="specialUse"
             android:exported="false"
-        >
+            android:foregroundServiceType="specialUse|location">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Web Browser on Overlay Window"
