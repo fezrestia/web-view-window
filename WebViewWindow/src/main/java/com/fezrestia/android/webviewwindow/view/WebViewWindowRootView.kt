@@ -7,7 +7,8 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.graphics.Point
-import android.os.Build
+import android.graphics.Rect
+import android.hardware.display.DisplayManager
 import android.os.Bundle
 import android.os.Message
 import android.util.AttributeSet
@@ -16,6 +17,7 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -29,21 +31,47 @@ import com.fezrestia.android.webviewwindow.R
 import kotlin.math.abs
 import kotlin.math.max
 
-class WebViewWindowRootView(
+class WebViewWindowRootView @JvmOverloads constructor(
         context: Context,
-        attrs: AttributeSet?,
-        defStyle: Int) : FrameLayout(context, attrs, defStyle) {
-
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0) : FrameLayout(context, attrs, defStyleAttr) {
     // Grip size.
     private val SLIDER_GRIP_WIDTH_PIX = resources.getDimensionPixelSize(R.dimen.grip_width)
     private val SLIDER_GRIP_HEIGHT_PIX = resources.getDimensionPixelSize(R.dimen.grip_height)
     // Icon size.
     private val RIGHT_BOTTOM_ICON_SIZE_PIX = resources.getDimensionPixelSize(R.dimen.right_bottom_icon_size)
 
-    // Display size.
-    private lateinit var displaySize: LayoutRect
-    // Status bar.
-    private var statusBarSize = 0
+    // Display related.
+    private val displayManager: DisplayManager
+            = context.getSystemService(DisplayManager::class.java)
+    private var displayRect = Rect()
+    private val displayListener = object : DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) {
+            // NOP.
+        }
+
+        override fun onDisplayRemoved(displayId: Int) {
+            // NOP.
+        }
+
+        override fun onDisplayChanged(displayId: Int) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "DisplayListener.onDisplayChanged()")
+
+            val nextRect = windowManager.maximumWindowMetrics.bounds
+
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "DisplayChanged : "
+                    + "prev=${displayRect.width()}x${displayRect.height()}, "
+                    + "next=${nextRect.width()}x${nextRect.height()}")
+
+            if (displayRect.width() != nextRect.width()
+                    || displayRect.height() != nextRect.height()) {
+                displayRect = nextRect
+
+                // Re-layout for new display config.
+                updateTotalUserInterface()
+            }
+        }
+    }
 
     // Display orientation.
     private enum class Orientation {
@@ -100,21 +128,12 @@ class WebViewWindowRootView(
     }
     private var callback: Callback? = null
 
-    // CONSTRUCTOR.
-    constructor(context: Context) : this(context, null) {
-        // NOP.
-    }
-
-    // CONSTRUCTOR.
-    constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0) {
-        // NOP.
-    }
-
     /**
      * Initialize all of configurations.
      *
      * @param callback
      */
+    @SuppressLint("ClickableViewAccessibility")
     fun initialize(callback: Callback) {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "initialize() : E")
 
@@ -132,16 +151,34 @@ class WebViewWindowRootView(
                 NOT_INTERACTIVE_WINDOW_FLAGS,
                 PixelFormat.TRANSLUCENT)
 
+        // Callback for display change event.
+        displayManager.registerDisplayListener(displayListener, handler)
+        displayRect = windowManager.maximumWindowMetrics.bounds  // initial disp size.
+
         if (Log.IS_DEBUG) Log.logDebug(TAG, "initialize() : X")
     }
 
     /**
      * Release all resources.
      */
+    @SuppressLint("ClickableViewAccessibility")
     fun release() {
         callback = null
         resizer_grip.setOnTouchListener(null)
         add_new_web_frame_button.setOnClickListener(null)
+
+        // Release display change callback.
+        displayManager.unregisterDisplayListener(displayListener)
+    }
+
+    fun getStatusBarHeight(): Int {
+        val insets = windowManager.currentWindowMetrics.windowInsets
+        return insets.getInsetsIgnoringVisibility(WindowInsets.Type.systemBars()).top
+    }
+
+    fun getNavigationBarHeight(): Int {
+        val insets = windowManager.currentWindowMetrics.windowInsets
+        return insets.getInsetsIgnoringVisibility(WindowInsets.Type.systemBars()).bottom
     }
 
     /**
@@ -255,29 +292,13 @@ class WebViewWindowRootView(
     }
 
     private fun updateDisplayConfig() {
-        // Get display size.
-        displaySize = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            val size = Point()
-            @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.getSize(size)
-            LayoutRect(0, 0, size.x, size.y)
-        } else {
-            val rect = windowManager.currentWindowMetrics.bounds
-            LayoutRect(0, 0, rect.width(), rect.height())
-        }
-
-        if (Log.IS_DEBUG) Log.logDebug(TAG, "updateDisplayConfig() : $displaySize")
+        if (Log.IS_DEBUG) Log.logDebug(TAG, "updateDisplayConfig() : $displayRect")
 
         // Get display displayOrientation.
-        displayOrientation = if (displaySize.height < displaySize.width) {
+        displayOrientation = if (displayRect.height() < displayRect.width()) {
             Orientation.LANDSCAPE
         } else {
             Orientation.PORTRAIT
-        }
-
-        val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
-        if (resourceId > 0) {
-            statusBarSize = resources.getDimensionPixelSize(resourceId)
         }
     }
 
@@ -285,20 +306,23 @@ class WebViewWindowRootView(
     private fun updateWindowParams() {
         windowLayoutParams.gravity = Gravity.LEFT or Gravity.TOP
 
+        val statusBarSize = getStatusBarHeight()
+        val navBarSize = getNavigationBarHeight()
+
         // Window size.
         when (displayOrientation) {
             Orientation.PORTRAIT -> {
-                windowLayoutParams.width = displaySize.shortLine
-                windowLayoutParams.height = (displaySize.longLine * SCREEN_LONG_LINE_CLEARANCE).toInt()
+                windowLayoutParams.width = displayRect.width()
+                windowLayoutParams.height = (displayRect.height() * SCREEN_LONG_LINE_CLEARANCE).toInt()
 
                 windowLayoutParams.y = 0
             }
 
             Orientation.LANDSCAPE -> {
-                windowLayoutParams.width = (displaySize.longLine * SCREEN_LONG_LINE_CLEARANCE).toInt()
-                windowLayoutParams.height = displaySize.shortLine - statusBarSize * 2
+                windowLayoutParams.width = (displayRect.width() * SCREEN_LONG_LINE_CLEARANCE).toInt()
+                windowLayoutParams.height = displayRect.height() - statusBarSize - navBarSize
 
-                windowLayoutParams.y = statusBarSize / 4
+                windowLayoutParams.y = 0
             }
         }
 
@@ -454,9 +478,7 @@ class WebViewWindowRootView(
     public override fun onConfigurationChanged(newConfig: Configuration) {
         if (Log.IS_DEBUG) Log.logDebug(TAG, "onConfigurationChanged() : Config=$newConfig")
         super.onConfigurationChanged(newConfig)
-
-        // Update UI.
-        updateTotalUserInterface()
+        // NOP.
     }
 
     private inner class WebFrameCallbackImpl : WebFrame.Callback {
@@ -505,7 +527,7 @@ class WebViewWindowRootView(
             val targetLayout: LayoutRect
             val targetAlpha: Float
             if (0 < diffPos.x) { // Open direction.
-                val openThreshold = displaySize.width / 3
+                val openThreshold = displayRect.width() / 3
                 if (openThreshold < stoppedRawPos.x) { // Do open.
                     targetLayout = openedWindowLayout
                     targetAlpha = ALPHA_OPEN
@@ -514,7 +536,7 @@ class WebViewWindowRootView(
                     targetAlpha = ALPHA_CLOSE
                 }
             } else { // Close direction.
-                val closeThreshold = displaySize.width * 2 / 3
+                val closeThreshold = displayRect.width() * 2 / 3
                 if (stoppedRawPos.x < closeThreshold) { // Do close.
                     targetLayout = closedWindowLayout
                     targetAlpha = ALPHA_CLOSE
@@ -590,7 +612,6 @@ class WebViewWindowRootView(
         private var onDownLayoutFlexLineSize = 0
         private var onDownBasePosit = 0
 
-        @SuppressLint("ClickableViewAccessibility")
         override fun onTouch(view: View, event: MotionEvent): Boolean {
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
@@ -612,10 +633,12 @@ class WebViewWindowRootView(
                 }
 
                 MotionEvent.ACTION_MOVE -> {
+                    val statusBarSize = getStatusBarHeight()
+                    val navBarSize = getNavigationBarHeight()
                     when (displayOrientation) {
                         Orientation.PORTRAIT -> {
                             val diff = event.rawY.toInt() - onDownBasePosit
-                            val maxLimit = displaySize.height - openedWindowLayout.y - statusBarSize
+                            val maxLimit = displayRect.height() - openedWindowLayout.y - statusBarSize - navBarSize
                             val newWinFlexLineSize = onDownWinFlexLineSize + diff
                             val newLayoutFlexLineSize = onDownLayoutFlexLineSize + diff
 
@@ -633,7 +656,7 @@ class WebViewWindowRootView(
                         }
                         Orientation.LANDSCAPE -> {
                             val diff = event.rawX.toInt() - onDownBasePosit
-                            val maxLimit = displaySize.width - openedWindowLayout.x
+                            val maxLimit = displayRect.width() - openedWindowLayout.x - statusBarSize
                             val newWinFlexLineSize = onDownWinFlexLineSize + diff
                             val newLayoutFlexLineSize = onDownLayoutFlexLineSize + diff
 
@@ -662,6 +685,8 @@ class WebViewWindowRootView(
                     onDownBasePosit = 0
 
                     webFrames.forEach(WebFrame::showGrip)
+
+                    view.performClick()  // NOP
                 }
 
                 else -> {
