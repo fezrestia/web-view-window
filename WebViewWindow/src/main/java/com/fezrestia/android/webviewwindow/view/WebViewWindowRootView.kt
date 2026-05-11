@@ -774,10 +774,10 @@ class WebViewWindowRootView(
                             add_new_web_frame_button.visibility = INVISIBLE
 
                             // Fix window size.
-//                            windowLayoutParams.height = closedWindowLayout.height
-//                            windowManager.updateViewLayout(
-//                                this@WebViewWindowRootView,
-//                                windowLayoutParams)
+                            windowLayoutParams.height = closedWindowLayout.height
+                            windowManager.updateViewLayout(
+                                this@WebViewWindowRootView,
+                                windowLayoutParams)
 
                             // Request to release WakeLock
                             callback?.onWakeLockReleaseRequested()
@@ -797,10 +797,10 @@ class WebViewWindowRootView(
                         if (Log.IS_DEBUG) Log.logDebug(TAG, "Expand window size in advance.")
 
                         // Fix window size.
-//                        windowLayoutParams.height = openedWindowLayout.height
-//                        windowManager.updateViewLayout(
-//                                this@WebViewWindowRootView,
-//                                windowLayoutParams)
+                        windowLayoutParams.height = openedWindowLayout.height
+                        windowManager.updateViewLayout(
+                                this@WebViewWindowRootView,
+                                windowLayoutParams)
                     }
 
                     val diff = targetWindowLayout.height - layoutParams.height
