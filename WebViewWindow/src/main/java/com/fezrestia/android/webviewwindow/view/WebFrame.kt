@@ -14,6 +14,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.*
+import android.view.GestureDetector.SimpleOnGestureListener
 import android.webkit.WebView
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -30,7 +31,6 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import org.apache.commons.validator.routines.UrlValidator
-import kotlin.math.abs
 import kotlin.math.min
 
 class WebFrame(
@@ -40,7 +40,6 @@ class WebFrame(
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
 
-    private val TOUCH_SLOP: Int = ViewConfiguration.get(context).scaledTouchSlop
     private val SLIDER_GRIP_HEIGHT_PIX = resources.getDimensionPixelSize(R.dimen.grip_height)
 
     private val DRAWABLE_SLIDER_GRIP_SELECTED = ResourcesCompat.getDrawable(
@@ -213,8 +212,19 @@ class WebFrame(
         nav_bar_scale_reset_button.setOnClickListener(NavBarScaleResetButtonOnClickListener())
 
         // Slider grip.
-        slider_grip.setOnTouchListener(SliderGripOnTouchListenerImpl())
-        slider_grip.setOnLongClickListener(SliderGripOnLongClickListenerImpl())
+        val sliderGripGestureListener = SliderGripGestureListener()
+        val sliderGripGestureDetector = GestureDetector(context, sliderGripGestureListener)
+        slider_grip.setOnTouchListener { view, event ->
+            val handled = sliderGripGestureDetector.onTouchEvent(event)
+            if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
+                sliderGripGestureListener.onUp(event)
+                if (handled) {
+                    // If gesture detector handle UP/CANCEL event, it means single tap up.
+                    view.performClick()
+                }
+            }
+            true
+        }
 
         // Per-layout process.
         viewTreeObserver.addOnGlobalLayoutListener(LayoutObserverImpl())
@@ -350,13 +360,12 @@ class WebFrame(
         nav_bar_scale_up_button.setOnClickListener(null)
 
         slider_grip.setOnTouchListener(null)
-        slider_grip.setOnLongClickListener(null)
 
         web_view.release()
     }
 
-    private inner class SliderGripOnTouchListenerImpl : OnTouchListener {
-        private val TAG = "SliderGripOnTouchListenerImpl"
+    private inner class SliderGripGestureListener : SimpleOnGestureListener() {
+        private val TAG = "SliderGripGestureListener"
 
         private var onDownRawX = 0
         private var onDownRawY = 0
@@ -370,85 +379,83 @@ class WebFrame(
             return curY - onDownRawY
         }
 
-        override fun onTouch(view: View, event: MotionEvent): Boolean {
-            val curX = event.rawX.toInt()
-            val curY = event.rawY.toInt()
+        override fun onDown(event: MotionEvent): Boolean {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onDown()")
 
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    if (Log.IS_DEBUG) Log.logDebug(TAG, "## ACTION_DOWN")
+            onDownRawX = event.rawX.toInt()
+            onDownRawY = event.rawY.toInt()
+            isDragging = false
 
-                    onDownRawX = curX
-                    onDownRawY = curY
-                }
+            return true
+        }
 
-                MotionEvent.ACTION_MOVE -> {
-                    if (Log.IS_DEBUG) Log.logDebug(TAG, "## ACTION_MOVE")
+        fun onUp(event: MotionEvent) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onUp()")
 
-                    // Detect finger starts moving or not.
-                    if (isDragging) {
-                        // Drag on going.
-                        callback?.onSlideWindowOnGoing(
-                                Point(onDownRawX, onDownRawY),
-                                Point(diffX(curX), diffY(curY)))
-                    } else {
-                        // Finger still stayed yet.
-                        if (TOUCH_SLOP < abs(diffX(curX))) {
-                            // Drag is started.
-
-                            isDragging = true
-
-                            callback?.onSlideWindowStarted(Point(curX, curY))
-
-                            // Update touch down pos to smooth drag starting. (to start diff from 0)
-                            onDownRawX = curX
-                            onDownRawY = curY
-                        }
-                    }
-                }
-
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    if (Log.IS_DEBUG) Log.logDebug(TAG, "## ACTION_UP/CANCEL")
-
-                    if (isDragging) {
-                        // Drag end.
-                        callback?.onSlideWindowStopped(
-                                Point(onDownRawX, onDownRawY),
-                                Point(diffX(curX), diffY(curY)),
-                                Point(curX, curY))
-                    } else {
-                        // Not dragged. Maybe clicked.
-                        if (abs(diffX(curX)) < TOUCH_SLOP && abs(diffY(curY)) < TOUCH_SLOP) {
-                            performClick()
-                            callback?.onTabClicked(frameOrder)
-
-                            if (web_view.isReloadRequired) {
-                                web_view.reload()
-                            }
-                        }
-                    }
-
-                    // Reset.
-                    onDownRawX = 0
-                    onDownRawY = 0
-                    isDragging = false
-                }
+            if (isDragging) {
+                // Drag end.
+                val curX = event.rawX.toInt()
+                val curY = event.rawY.toInt()
+                callback?.onSlideWindowStopped(
+                    Point(onDownRawX, onDownRawY),
+                    Point(diffX(curX), diffY(curY)),
+                    Point(curX, curY))
             }
 
-            return false // to detect long-click.
+            // Reset.
+            onDownRawX = 0
+            onDownRawY = 0
+            isDragging = false
         }
-    }
 
-    private inner class SliderGripOnLongClickListenerImpl : OnLongClickListener {
-        private val TAG = "SliderGripOnLongClickListenerImpl"
+        override fun onScroll(
+                downEvent: MotionEvent?,
+                moveEvent: MotionEvent,
+                distanceX: Float,
+                distanceY: Float): Boolean {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onScroll()")
+
+            val curX = moveEvent.rawX.toInt()
+            val curY = moveEvent.rawY.toInt()
+
+            if (isDragging) {
+                // Drag on going.
+                callback?.onSlideWindowOnGoing(
+                        Point(onDownRawX, onDownRawY),
+                        Point(diffX(curX), diffY(curY)))
+            } else {
+                // Drag is started.
+                isDragging = true
+
+                callback?.onSlideWindowStarted(Point(curX, curY))
+
+                // Update touch down pos to smooth drag starting. (to start diff from 0)
+                onDownRawX = curX
+                onDownRawY = curY
+            }
+
+            return true
+        }
+
+        override fun onSingleTapUp(e: MotionEvent): Boolean {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onSingleTapUp()")
+
+            callback?.onTabClicked(frameOrder)
+
+            if (web_view.isReloadRequired) {
+                web_view.reload()
+            }
+
+            return true
+        }
 
         @SuppressLint("RtlHardcoded")
-        override fun onLongClick(v: View?): Boolean {
-            if (Log.IS_DEBUG) Log.logDebug(TAG, "## LONG-CLICK")
+        override fun onLongPress(e: MotionEvent) {
+            if (Log.IS_DEBUG) Log.logDebug(TAG, "onLongPress()")
 
             if (!isTopFrame) {
                 if (Log.IS_DEBUG) Log.logDebug(TAG, "## NOP. isTopFrame == false")
-                return false
+                return
             }
 
             val popup = PopupMenu(context, slider_grip)
@@ -476,8 +483,6 @@ class WebFrame(
             }
 
             popup.show()
-
-            return true
         }
 
         private inner class OnMenuItemClickListenerImpl : PopupMenu.OnMenuItemClickListener {
