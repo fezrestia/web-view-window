@@ -173,7 +173,7 @@ class WebFrame(
         }
 
         override fun onNewUrlLoading(url: String) {
-            val visible = if (url.startsWith("http://")) View.VISIBLE else View.INVISIBLE
+            val visible = if (url.startsWith("http://")) VISIBLE else INVISIBLE
             http_indicator.visibility = visible
 
             nav_bar_url.text = url
@@ -714,11 +714,11 @@ class WebFrame(
     }
 
     fun showGrip() {
-        slider_grip_container.visibility = FrameLayout.VISIBLE
+        slider_grip_container.visibility = VISIBLE
     }
 
     fun hideGrip() {
-        slider_grip_container.visibility = FrameLayout.INVISIBLE
+        slider_grip_container.visibility = INVISIBLE
     }
 
     companion object {

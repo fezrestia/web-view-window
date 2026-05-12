@@ -24,4 +24,10 @@ class BlockNavigationImageView(
         val list = listOf(navExclusionRect)
         this.systemGestureExclusionRects = list
     }
+
+    override fun performClick(): Boolean {
+        super.performClick()
+        // NOP
+        return true
+    }
 }

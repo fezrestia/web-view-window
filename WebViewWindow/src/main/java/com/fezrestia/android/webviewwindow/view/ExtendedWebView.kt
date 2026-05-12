@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.http.SslError
-import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
@@ -57,14 +56,9 @@ class ExtendedWebView(
         // Default User-Agent.
         val old = settings.userAgentString
         val pkgName = context.packageName
-        val pkgInfo = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            @Suppress("DEPRECATION")
-            context.packageManager.getPackageInfo(pkgName, PackageManager.GET_META_DATA)
-        } else {
-            context.packageManager.getPackageInfo(
-                    pkgName,
-                    PackageManager.PackageInfoFlags.of(PackageManager.GET_META_DATA.toLong()))
-        }
+        val pkgInfo = context.packageManager.getPackageInfo(
+                pkgName,
+                PackageManager.PackageInfoFlags.of(PackageManager.GET_META_DATA.toLong()))
         val verName = pkgInfo.versionName
         defaultUserAgent = "$old WebViewWindow/$verName"
     }
@@ -95,7 +89,7 @@ class ExtendedWebView(
         fun onNewUrlLoading(url: String)
     }
 
-    private inner class EvalJsCallback : ValueCallback<String> {
+    private class EvalJsCallback : ValueCallback<String> {
         private val TAG = "EvalJsCallback"
 
         override fun onReceiveValue(value: String) {
@@ -275,7 +269,7 @@ class ExtendedWebView(
         }
     }
 
-    private inner class JavaScriptNativeInterface {
+    private class JavaScriptNativeInterface {
         private val TAG = "JSNI"
 
         /**
