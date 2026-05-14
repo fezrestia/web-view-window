@@ -1,68 +1,47 @@
 version: 2.1
 
-defaults: &defaults
-    working_directory: /tmp/workspace
-    docker:
-          - image: cimg/android:2023.06.1-ndk
-
 jobs:
-    sync:
-        <<: *defaults
+  build_test_lint:
+    docker:
+      - image: cimg/android:2026.03.1-ndk
 
-        steps:
-            - checkout
+    working_directory: ~/project
 
-            - run:
-                  name: Restore google-services.json
-                  command: |
-                      mkdir WebViewWindow/src/debug
-                      touch WebViewWindow/src/debug/google-services.json
-                      echo $GOOGLE_SERVICES_JSON >> WebViewWindow/src/debug/google-services.json
+    environment:
+      GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.jvmargs="-Xmx4g"
 
-            - persist_to_workspace:
-                root: /tmp/workspace
-                paths:
-                    - .
+    steps:
+      - checkout
 
-    build:
-        <<: *defaults
+      - run:
+          name: Restore google-services.json
+          command: |
+            mkdir -p WebViewWindow/src/debug
+            if [ -n "${GOOGLE_SERVICES_JSON}" ]; then
+              printf '%s' "${GOOGLE_SERVICES_JSON}" > WebViewWindow/src/debug/google-services.json
+            else
+              echo '{}' > WebViewWindow/src/debug/google-services.json
+            fi
 
-        steps:
-            - attach_workspace:
-                at: /tmp/workspace
+      - run:
+          name: Build
+          command: ./gradlew assembleDebug
 
-            - run:
-                name: Run Debug Build
-                command: ./gradlew assembleDebug
+      - run:
+          name: Test
+          command: ./gradlew testDebug
 
-    test:
-        <<: *defaults
+      - run:
+          name: Lint
+          command: ./gradlew lintDebug
 
-        steps:
-            - attach_workspace:
-                at: /tmp/workspace
+      - store_test_results:
+          path: WebViewWindow/build/test-results
 
-            - run:
-                name: Run Test
-                command: ./gradlew testDebug
-
-            - run:
-                name: Run Lint
-                command: ./gradlew lintDebug
-
-            - store_artifacts:
-                path: build/reports
-
-            - store_test_results:
-                path: build/reports
+      - store_artifacts:
+          path: WebViewWindow/build/reports
 
 workflows:
-    sync_build_test:
-        jobs:
-            - sync
-            - build:
-                requires:
-                    - sync
-            - test:
-                requires:
-                    - build
+  ci:
+    jobs:
+      - build_test_lint
