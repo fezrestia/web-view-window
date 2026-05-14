@@ -87,12 +87,14 @@ jobs:
     - name: Run manual build steps
       if: matrix.build-mode == 'manual'
       shell: bash
+      env:
+        GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
       run: |
         cd $GITHUB_WORKSPACE
 
         mkdir -p ./WebViewWindow/src/debug
-        if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
-          printf '%s' "${{ secrets.GOOGLE_SERVICES_JSON }}" > ./WebViewWindow/src/debug/google-services.json
+        if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+          printf '%s' "$GOOGLE_SERVICES_JSON" > ./WebViewWindow/src/debug/google-services.json
         else
           echo '{}' > ./WebViewWindow/src/debug/google-services.json
         fi
