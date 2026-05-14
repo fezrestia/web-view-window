@@ -1,3 +1,7 @@
-# Web View Window always on TOP Browser
+# Web View Window always on TOP Web Browser
 
-[![CircleCI](https://circleci.com/gh/fezrestia/web-view-window/tree/master.svg?style=svg)](https://circleci.com/gh/fezrestia/web-view-window/tree/master)
+## Status
+
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/fezrestia/web-view-window/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/fezrestia/web-view-window/tree/master)
+
+
