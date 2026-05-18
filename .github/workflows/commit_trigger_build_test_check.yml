@@ -1,0 +1,72 @@
+name: Commit Trigger Build Test Check
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    branches:
+      - master
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+  workflow_dispatch:
+
+jobs:
+  build_test_check:
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_SERVICES_JSON_PATH: WebViewWindow/src/debug/google-services.json
+
+    steps:
+      - name: Sync Repo
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Env
+        run: |
+          # add permission.
+          chmod +x ./gradlew
+
+          # restore cred.
+          mkdir -p $(dirname ${{ env.GOOGLE_SERVICES_JSON_PATH }})
+          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+            printf '%s' "${{ secrets.GOOGLE_SERVICES_JSON }}" > ${{ env.GOOGLE_SERVICES_JSON_PATH }}
+          else
+            echo '{}' > ${{ env.GOOGLE_SERVICES_JSON_PATH }}
+          fi
+
+      - name: Build
+        run: |
+          ./gradlew assembleDebug
+
+      - name: Test
+        run: |
+          ./gradlew testDebug
+
+      - name: Check
+        run: |
+          ./gradlew lintDebug
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: WebViewWindow/build/test-results
+
+      - name: Upload Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: WebViewWindow/build/reports
