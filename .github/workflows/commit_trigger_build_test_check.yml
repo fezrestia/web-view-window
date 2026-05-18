@@ -18,8 +18,6 @@ on:
 jobs:
   build_test_check:
     runs-on: ubuntu-latest
-    env:
-      GOOGLE_SERVICES_JSON_PATH: WebViewWindow/src/debug/google-services.json
 
     steps:
       - name: Sync Repo
@@ -33,16 +31,19 @@ jobs:
           cache: gradle
 
       - name: Setup Env
+        env:
+          GOOGLE_SERVICES_JSON_PATH: WebViewWindow/src/debug/google-services.json
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           # add permission.
           chmod +x ./gradlew
 
           # restore cred.
-          mkdir -p $(dirname ${{ env.GOOGLE_SERVICES_JSON_PATH }})
-          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
-            printf '%s' "${{ secrets.GOOGLE_SERVICES_JSON }}" > ${{ env.GOOGLE_SERVICES_JSON_PATH }}
+          mkdir -p $(dirname ${GOOGLE_SERVICES_JSON_PATH})
+          if [ -n "${GOOGLE_SERVICES_JSON}" ]; then
+            printf '%s' "${GOOGLE_SERVICES_JSON}" > ${GOOGLE_SERVICES_JSON_PATH}
           else
-            echo '{}' > ${{ env.GOOGLE_SERVICES_JSON_PATH }}
+            echo '{}' > ${GOOGLE_SERVICES_JSON_PATH}
           fi
 
       - name: Build
